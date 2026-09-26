@@ -12,6 +12,7 @@ from psycopg_pool import AsyncConnectionPool
 from app.config import settings
 
 SCHEMA_FILE = Path(__file__).resolve().parent.parent / "sql" / "schema.sql"
+EXPERTISE_FILE = SCHEMA_FILE.with_name("expertise.sql")   # idempotent; also applied alone by migrate()
 
 pool = AsyncConnectionPool(
     settings.DATABASE_URL,
@@ -48,15 +49,25 @@ async def execute(sql: str, params: dict | tuple | None = None) -> None:
 
 DROP_ALL = """
 DROP MATERIALIZED VIEW IF EXISTS connection_daily CASCADE;
-DROP TABLE IF EXISTS meetings, connection_events, connections, team_overlaps, similarities,
+DROP TABLE IF EXISTS match_feedback, skill_edges, person_skill_state, expertise_events, skill_labels,
+  skills, meetings, connection_events, connections, team_overlaps, similarities,
   tasks, activity_events, people, teams, orgs CASCADE;
 """
 
 
 async def apply_schema(reset: bool = False) -> None:
-    """Apply sql/schema.sql one statement at a time in autocommit mode
+    """Apply sql/schema.sql then sql/expertise.sql one statement at a time in autocommit mode
     (continuous aggregates can't be created inside a transaction)."""
-    sql = re.sub(r"--[^\n]*", "", SCHEMA_FILE.read_text())
+    await _apply([SCHEMA_FILE, EXPERTISE_FILE], reset)
+
+
+async def migrate() -> None:
+    """Bring an existing database up to date without touching its data (expertise.sql is idempotent)."""
+    await _apply([EXPERTISE_FILE])
+
+
+async def _apply(files: list[Path], reset: bool = False) -> None:
+    sql = re.sub(r"--[^\n]*", "", "\n".join(f.read_text() for f in files))
     statements = [s.strip() for s in sql.split(";") if s.strip()]
     async with await psycopg.AsyncConnection.connect(settings.DATABASE_URL, autocommit=True) as conn:
         if reset:
