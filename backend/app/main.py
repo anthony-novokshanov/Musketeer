@@ -1,16 +1,25 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.db import fetch_one, pool
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await pool.open()
-    # Slack handler, Gmail poller and background jobs start here (Phase 3).
+    if settings.ENABLE_SLACK:
+        from app.bot import slack_bot
+        await slack_bot.start()
+    # Gmail poller and background jobs start here (Phase 3).
     yield
+    if settings.ENABLE_SLACK:
+        await slack_bot.stop()
     await pool.close()
 
 
