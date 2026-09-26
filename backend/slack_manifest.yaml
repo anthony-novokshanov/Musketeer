@@ -1,5 +1,5 @@
 display_information:
-  name: Bridge
+  name: Musketeer
   description: Connects you with colleagues who've done similar work.
   background_color: "#1f2937"
 features:
@@ -8,7 +8,7 @@ features:
     messages_tab_enabled: true
     messages_tab_read_only_enabled: false
   bot_user:
-    display_name: Bridge
+    display_name: Musketeer
     always_online: true
 oauth_config:
   scopes:
@@ -21,6 +21,10 @@ oauth_config:
       - users:read
       # Not in spec §10, but required for Slack ingest (§6.3): read public channels the bot is in.
       - channels:history
+      # Meeting notes canvas in the group DM: create/edit it, and read it back for "Draft output".
+      - canvases:write
+      - canvases:read
+      - files:read
 settings:
   event_subscriptions:
     bot_events:

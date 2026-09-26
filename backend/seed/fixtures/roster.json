@@ -1,0 +1,497 @@
+{
+ "generated_at": "2026-09-26T17:17:15+00:00",
+ "orgs": [
+  {
+   "id": "org_eng",
+   "name": "Engineering"
+  },
+  {
+   "id": "org_rec",
+   "name": "Recruiting"
+  },
+  {
+   "id": "org_prod",
+   "name": "Product & Design"
+  }
+ ],
+ "teams": [
+  {
+   "id": "t_payments",
+   "org_id": "org_eng",
+   "name": "Payments Infrastructure",
+   "lead_id": "p_001"
+  },
+  {
+   "id": "t_messaging",
+   "org_id": "org_eng",
+   "name": "Messaging Infra",
+   "lead_id": "p_007"
+  },
+  {
+   "id": "t_ads",
+   "org_id": "org_eng",
+   "name": "Ads Ranking",
+   "lead_id": "p_013"
+  },
+  {
+   "id": "t_devplat",
+   "org_id": "org_eng",
+   "name": "Developer Platform",
+   "lead_id": "p_019"
+  },
+  {
+   "id": "t_uni",
+   "org_id": "org_rec",
+   "name": "University Recruiting",
+   "lead_id": "p_024"
+  },
+  {
+   "id": "t_events",
+   "org_id": "org_rec",
+   "name": "Events & Community Recruiting",
+   "lead_id": "p_029"
+  },
+  {
+   "id": "t_growth",
+   "org_id": "org_prod",
+   "name": "Growth Product",
+   "lead_id": "p_033"
+  },
+  {
+   "id": "t_design",
+   "org_id": "org_prod",
+   "name": "Design Systems",
+   "lead_id": "p_037"
+  }
+ ],
+ "people": [
+  {
+   "id": "p_001",
+   "team_id": "t_payments",
+   "manager_id": null,
+   "name": "Maya Chen",
+   "title": "Engineering Manager, Payments Infrastructure",
+   "email": "maya.chen@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": true
+  },
+  {
+   "id": "p_002",
+   "team_id": "t_payments",
+   "manager_id": "p_001",
+   "name": "David Okafor",
+   "title": "Senior Software Engineer, Payments Infrastructure",
+   "email": "david.okafor@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_003",
+   "team_id": "t_payments",
+   "manager_id": "p_001",
+   "name": "Sofia Ramirez",
+   "title": "Software Engineer, Payments Infrastructure",
+   "email": "sofia.ramirez@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_004",
+   "team_id": "t_payments",
+   "manager_id": "p_001",
+   "name": "James Park",
+   "title": "Senior Software Engineer, Payments Infrastructure",
+   "email": "james.park@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_005",
+   "team_id": "t_payments",
+   "manager_id": "p_001",
+   "name": "Aisha Khan",
+   "title": "Software Engineer, Payments Infrastructure",
+   "email": "aisha.khan@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_006",
+   "team_id": "t_payments",
+   "manager_id": "p_001",
+   "name": "Lucas Almeida",
+   "title": "Software Engineer, Payments Infrastructure",
+   "email": "lucas.almeida@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_007",
+   "team_id": "t_messaging",
+   "manager_id": "p_001",
+   "name": "Elena Petrova",
+   "title": "Engineering Manager, Messaging Infra",
+   "email": "elena.petrova@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": true
+  },
+  {
+   "id": "p_008",
+   "team_id": "t_messaging",
+   "manager_id": "p_007",
+   "name": "Kevin Nguyen",
+   "title": "Senior Software Engineer, Messaging Infra",
+   "email": "kevin.nguyen@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_009",
+   "team_id": "t_messaging",
+   "manager_id": "p_007",
+   "name": "Amara Diallo",
+   "title": "Software Engineer, Messaging Infra",
+   "email": "amara.diallo@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_010",
+   "team_id": "t_messaging",
+   "manager_id": "p_007",
+   "name": "Rachel Kim",
+   "title": "Staff Software Engineer, Messaging Infra",
+   "email": "rachel.kim@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_011",
+   "team_id": "t_messaging",
+   "manager_id": "p_007",
+   "name": "Omar Haddad",
+   "title": "Software Engineer, Messaging Infra",
+   "email": "omar.haddad@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_012",
+   "team_id": "t_messaging",
+   "manager_id": "p_007",
+   "name": "Grace Liu",
+   "title": "Senior Software Engineer, Messaging Infra",
+   "email": "grace.liu@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_013",
+   "team_id": "t_ads",
+   "manager_id": "p_001",
+   "name": "Victor Mensah",
+   "title": "Engineering Manager, Ads Ranking",
+   "email": "victor.mensah@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": true
+  },
+  {
+   "id": "p_014",
+   "team_id": "t_ads",
+   "manager_id": "p_013",
+   "name": "Hannah Cohen",
+   "title": "Senior Software Engineer, Ads Ranking",
+   "email": "hannah.cohen@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_015",
+   "team_id": "t_ads",
+   "manager_id": "p_013",
+   "name": "Arjun Patel",
+   "title": "Software Engineer, Ads Ranking",
+   "email": "arjun.patel@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_016",
+   "team_id": "t_ads",
+   "manager_id": "p_013",
+   "name": "Emily Zhang",
+   "title": "Staff Software Engineer, Ads Ranking",
+   "email": "emily.zhang@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_017",
+   "team_id": "t_ads",
+   "manager_id": "p_013",
+   "name": "Carlos Rivera",
+   "title": "Software Engineer, Ads Ranking",
+   "email": "carlos.rivera@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_018",
+   "team_id": "t_ads",
+   "manager_id": "p_013",
+   "name": "Fatima Al-Sayed",
+   "title": "Senior Software Engineer, Ads Ranking",
+   "email": "fatima.alsayed@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_019",
+   "team_id": "t_devplat",
+   "manager_id": "p_001",
+   "name": "Daniel Kimura",
+   "title": "Engineering Manager, Developer Platform",
+   "email": "daniel.kimura@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": true
+  },
+  {
+   "id": "p_020",
+   "team_id": "t_devplat",
+   "manager_id": "p_019",
+   "name": "Zoe Bennett",
+   "title": "Senior Software Engineer, Developer Platform",
+   "email": "zoe.bennett@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_021",
+   "team_id": "t_devplat",
+   "manager_id": "p_019",
+   "name": "Rajesh Kumar",
+   "title": "Software Engineer, Developer Platform",
+   "email": "rajesh.kumar@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_022",
+   "team_id": "t_devplat",
+   "manager_id": "p_019",
+   "name": "Ingrid Larsen",
+   "title": "Staff Software Engineer, Developer Platform",
+   "email": "ingrid.larsen@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_023",
+   "team_id": "t_devplat",
+   "manager_id": "p_019",
+   "name": "Marcus Thompson",
+   "title": "Software Engineer, Developer Platform",
+   "email": "marcus.thompson@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_024",
+   "team_id": "t_uni",
+   "manager_id": null,
+   "name": "Diana Washington",
+   "title": "Lead, University Recruiting",
+   "email": "diana.washington@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": true
+  },
+  {
+   "id": "p_025",
+   "team_id": "t_uni",
+   "manager_id": "p_024",
+   "name": "Andy Shah",
+   "title": "Senior Recruiter, University Recruiting",
+   "email": "andy.shah@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_026",
+   "team_id": "t_uni",
+   "manager_id": "p_024",
+   "name": "Tyler Brooks",
+   "title": "Recruiter, University Recruiting",
+   "email": "tyler.brooks@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_027",
+   "team_id": "t_uni",
+   "manager_id": "p_024",
+   "name": "Mei Lin",
+   "title": "Recruiting Operations Specialist, University Recruiting",
+   "email": "mei.lin@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_028",
+   "team_id": "t_uni",
+   "manager_id": "p_024",
+   "name": "Alejandro Torres",
+   "title": "Sourcing Recruiter, University Recruiting",
+   "email": "alejandro.torres@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_029",
+   "team_id": "t_events",
+   "manager_id": "p_024",
+   "name": "Sarah Goldberg",
+   "title": "Lead, Events & Community Recruiting",
+   "email": "sarah.goldberg@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": true
+  },
+  {
+   "id": "p_030",
+   "team_id": "t_events",
+   "manager_id": "p_029",
+   "name": "Anthony Novokshanov",
+   "title": "Recruiter, Events & Community Recruiting",
+   "email": "anthony.novokshanov@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_031",
+   "team_id": "t_events",
+   "manager_id": "p_029",
+   "name": "Sam Ortiz",
+   "title": "Recruiting Analytics Specialist, Events & Community Recruiting",
+   "email": "sam.ortiz@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_032",
+   "team_id": "t_events",
+   "manager_id": "p_029",
+   "name": "Nia Johnson",
+   "title": "Community Partnerships Manager, Events & Community Recruiting",
+   "email": "nia.johnson@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_033",
+   "team_id": "t_growth",
+   "manager_id": null,
+   "name": "Laura Bennett",
+   "title": "Group Product Manager, Growth",
+   "email": "laura.bennett@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": true
+  },
+  {
+   "id": "p_034",
+   "team_id": "t_growth",
+   "manager_id": "p_033",
+   "name": "Jessica Wu",
+   "title": "Lifecycle Marketing Manager, Growth",
+   "email": "jessica.wu@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_035",
+   "team_id": "t_growth",
+   "manager_id": "p_033",
+   "name": "Michael Adeyemi",
+   "title": "Senior Product Manager, Growth",
+   "email": "michael.adeyemi@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_036",
+   "team_id": "t_growth",
+   "manager_id": "p_033",
+   "name": "Nina Kowalski",
+   "title": "Software Engineer, Growth Product",
+   "email": "nina.kowalski@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_037",
+   "team_id": "t_design",
+   "manager_id": "p_033",
+   "name": "Olivia Grant",
+   "title": "Design Manager, Design Systems",
+   "email": "olivia.grant@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": true
+  },
+  {
+   "id": "p_038",
+   "team_id": "t_design",
+   "manager_id": "p_037",
+   "name": "Tomas Silva",
+   "title": "Senior Product Designer, Design Systems",
+   "email": "tomas.silva@musketeer-demo.com",
+   "is_engineer": false,
+   "is_manager": false
+  },
+  {
+   "id": "p_039",
+   "team_id": "t_design",
+   "manager_id": "p_037",
+   "name": "Kofi Asante",
+   "title": "Accessibility Software Engineer, Design Systems",
+   "email": "kofi.asante@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  },
+  {
+   "id": "p_040",
+   "team_id": "t_design",
+   "manager_id": "p_037",
+   "name": "Isabella Rossi",
+   "title": "Software Engineer, Design Systems",
+   "email": "isabella.rossi@musketeer-demo.com",
+   "is_engineer": true,
+   "is_manager": false
+  }
+ ],
+ "planted": {
+  "kafka_lag": [
+   "p_002",
+   "p_008"
+  ],
+  "rate_limit": [
+   "p_014",
+   "p_020"
+  ],
+  "recruiting_mlh": [
+   "p_025",
+   "p_030"
+  ],
+  "amber_case": [
+   "p_031",
+   "p_036"
+  ]
+ },
+ "amber_task": {
+  "person_id": "p_031",
+  "summary": "Build a candidate referral tracking dashboard",
+  "task_type": "project",
+  "source": "email"
+ },
+ "demo": {
+  "viewer_id": "p_029",
+  "email_recipient_id": "p_030"
+ }
+}

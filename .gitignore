@@ -6,4 +6,5 @@ __pycache__/
 backend/seed/slack_map.json
 backend/credentials.json
 backend/token.json
+backend/tokens/
 node_modules/

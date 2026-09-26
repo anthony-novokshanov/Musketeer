@@ -1,0 +1,85 @@
+company: "Fictional Meta demo org"
+history_days: 60
+orgs:
+  - id: org_eng
+    name: Engineering
+    teams:
+      - {id: t_payments, name: Payments Infrastructure, size: 6, engineers: 6}
+      - {id: t_messaging, name: Messaging Infra, size: 6, engineers: 6}
+      - {id: t_ads, name: Ads Ranking, size: 6, engineers: 6}
+      - {id: t_devplat, name: Developer Platform, size: 5, engineers: 5}
+  - id: org_rec
+    name: Recruiting
+    teams:
+      - {id: t_uni, name: University Recruiting, size: 5, engineers: 0}
+      - {id: t_events, name: Events & Community Recruiting, size: 4, engineers: 0}
+  - id: org_prod
+    name: Product & Design
+    teams:
+      - {id: t_growth, name: Growth Product, size: 4, engineers: 1}
+      - {id: t_design, name: Design Systems, size: 4, engineers: 2}
+
+repos:
+  payments:  [services/payments/api, services/payments/consumer, services/payments/ledger]
+  messaging: [services/messaging/delivery, services/messaging/notifications, services/messaging/queue]
+  ads:       [services/ads/ranking, services/ads/serving, services/ads/serving/throttle]
+  platform:  [shared/kafka-client, shared/auth, platform/gateway/ratelimit, platform/ci]
+  web:       [web/design-system, web/growth/funnels]
+
+planted_overlaps:           # must surface as rank 1-2 matches; NO prior connections between these people
+  - id: recruiting_mlh      # the recruiter story; also a team-level bridge t_uni <-> t_events
+    people:
+      - {team: t_uni, persona: "Andy Shah, senior recruiter; ran MLH hackathon booths at 3 events this year"}
+      - {team: t_events, persona: "Anthony Novokshanov, recruiter, new to hackathons; receives the live demo email"}
+    team_bridge: [t_uni, t_events]   # teams do overlapping campus/hackathon work; zero cross-team connections
+  - id: kafka_lag
+    people:
+      - {team: t_payments, persona: "fixed consumer lag via shared/kafka-client batching"}
+      - {team: t_messaging, persona: "debugging notifications backlog; also touches shared/kafka-client"}
+  - id: rate_limit
+    people:
+      - {team: t_ads, persona: "built request throttling in services/ads/serving/throttle"}
+      - {team: t_devplat, persona: "built gateway rate limiting in platform/gateway/ratelimit"}
+  - id: amber_case          # cross-org; open task with no connection -> amber dot on viewer's report
+    people:
+      - {team: t_events, persona: "Sam Ortiz; open task (2 days old): build a candidate referral tracking dashboard"}
+      - {team: t_growth, persona: "PM who built the growth funnel dashboard in web/growth/funnels"}
+
+demo:
+  viewer: {team: t_events, role: lead}   # DEFAULT_VIEWER_ID; Anthony and Sam report to this person
+  email_recipient: Anthony Novokshanov
+  slack_mapped: [viewer, Anthony Novokshanov, Andy Shah]   # real Slack accounts on camera
+
+activity_per_person:
+  engineer: {prs: [5, 10], reviews: [3, 6], slack_messages: [3, 5]}
+  non_engineer: {slack_messages: [5, 8], emails: [4, 7]}
+
+seed_history:                 # backdated over last 42 days, for synopsis trends
+  connections: 25             # mostly within-org, ~8 cross-team, ~3 cross-org
+  helpful_rate: 0.8
+  statuses: {active: 18, declined: 3, expired: 2, accepted: 2}
+
+# --- Added after the first real pipeline run (not in TECH_SPEC §9.1) ---
+# Run 1 made every teammate do the same work as the planted people, burying the planted pairs
+# (kafka_lag rank 6, recruiting_mlh rank 4, amber_case no edge). These keep teams realistic but
+# distinct, so planted overlaps stand out. Non-planted members get focus areas in order (lead first).
+member_focus:
+  t_payments: ["leads the team: roadmap, incident reviews, on-call health", "payments API: idempotency keys and refund endpoints", "ledger: double-entry reconciliation and month-end close jobs", "PCI compliance: card tokenization and audit logging in the API", "multi-currency support and FX rate handling in the ledger"]
+  t_messaging: ["leads the team: roadmap, reliability reviews, hiring", "push notification templates and localization", "delivery: read receipts and per-conversation message ordering", "notification preferences and quiet hours", "email/SMS provider failover in delivery"]
+  t_ads: ["leads the team: ranking roadmap and launch reviews", "ranking model features and offline evaluation", "second-price auction and reserve pricing in serving", "creative review pipeline for new ads", "advertiser reporting metrics and billing events in serving"]
+  t_devplat: ["leads the team: platform roadmap and developer surveys", "CI speed: build caching and test sharding in platform/ci", "auth: OAuth token rotation and service identities in shared/auth", "flaky test detection and quarantine in platform/ci"]
+  t_uni: ["leads the team: university program strategy and headcount planning", "intern offer negotiation and closing", "interview scheduling operations and interviewer training", "new-grad sourcing campaigns on Handshake and LinkedIn"]
+  t_events: ["leads the team: events calendar, budget, and vendor contracts", "community partnerships with nonprofits and coding bootcamps"]
+  t_growth: ["leads the team as group PM: growth roadmap and experiment reviews", "lifecycle email campaigns and onboarding copy", "pricing page and plan packaging experiments"]
+  t_design: ["leads the team: design system governance and roadmap", "design tokens and theming in web/design-system", "accessibility audits of core components", "icon and illustration library"]
+
+planted_details:          # extra concrete detail for planted personas, by overlap id and person index
+  kafka_lag:
+    - "Owns the payments consumer lag problem: the consumer group fell hours behind at peak; fixed it by batching offset commits and tuning poll sizes in shared/kafka-client."
+    - "Debugging why notification messages pile up in the queue at peak (a growing backlog that takes hours to drain); suspects offset-commit behavior in shared/kafka-client. Calls it a backlog or messages piling up, never 'consumer lag'."
+  recruiting_mlh:
+    - "Knows the hackathon playbook end to end: MLH sponsor packages, booth logistics, swag, badge scanning, judging, and post-event candidate follow-up."
+    - "Staffs career-fair and conference booths (booth logistics, swag, badge scanning, lead follow-up) but has never worked a hackathon."
+  amber_case:
+    - "Has started building a referral tracking dashboard: sketching funnel charts (referred, screened, hired), conversion by referral source, and which events to instrument. Asks how others built dashboards; this is dashboard work more than event logistics."
+    - "Built the growth funnel dashboard in web/growth/funnels: signup-to-activation conversion, cohort charts, and event instrumentation."

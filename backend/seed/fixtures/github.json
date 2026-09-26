@@ -1,0 +1,4270 @@
+[
+ {
+  "repo": "payments",
+  "number": 101,
+  "title": "Add API SLO dashboards",
+  "body": "Adds p99 latency + error budget panels for auth/capture endpoints. Needed for Q4 roadmap review and on-call handoff.",
+  "author": "p_001",
+  "created_at": "2026-08-03T14:41:48.616373+00:00",
+  "merged_at": "2026-08-03T23:38:09.239575+00:00",
+  "files": [
+   "services/payments/api/slo_dashboards.json",
+   "services/payments/api/README.md"
+  ],
+  "commits": [
+   {
+    "message": "feat: add payments api SLO dashboard config"
+   },
+   {
+    "message": "docs: update api SLO thresholds"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_005",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T16:11:40.845846+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 102,
+  "title": "Add ledger reconciliation check",
+  "body": "Post-mortem follow-up from INC-2841 (Sept 2 ledger drift). Adds balance check job and PagerDuty alert when drift >$0.01. Owner: Maya.",
+  "author": "p_001",
+  "created_at": "2026-08-13T12:04:48.087176+00:00",
+  "merged_at": "2026-08-13T17:24:43.536248+00:00",
+  "files": [
+   "services/payments/ledger/reconciliation.py",
+   "services/payments/ledger/alerts.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add nightly ledger reconciliation check"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 103,
+  "title": "Fix consumer poison-message retry",
+  "body": "Consumer was crash-looping on malformed webhook retries. Adds DLQ routing after 5 attempts and structured logging for on-call.",
+  "author": "p_001",
+  "created_at": "2026-08-24T13:00:01.598276+00:00",
+  "merged_at": "2026-08-25T07:49:19.682917+00:00",
+  "files": [
+   "services/payments/consumer/retry_handler.py",
+   "services/payments/consumer/retry_handler_test.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: route poison messages to DLQ"
+   },
+   {
+    "message": "test: add DLQ routing tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_006",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-24T13:53:43.110838+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 104,
+  "title": "Enforce charge idempotency keys",
+  "body": "Incident review action from Aug chargeback spike. Enforces idempotency keys on POST /charges and returns 409 on duplicates.",
+  "author": "p_001",
+  "created_at": "2026-08-31T16:49:24.630966+00:00",
+  "merged_at": "2026-09-01T18:09:55.988382+00:00",
+  "files": [
+   "services/payments/api/idempotency.py",
+   "services/payments/api/charges.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce idempotency key on charges"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_005",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-31T17:58:10.630788+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 105,
+  "title": "Improve payout on-call alerts",
+  "body": "On-call got paged 3x last week for stuck payouts. Adds age-based alert ( >30m pending ) and runbook link. Cuts noise from low-value warns.",
+  "author": "p_001",
+  "created_at": "2026-09-08T16:59:15.125037+00:00",
+  "merged_at": "2026-09-09T14:56:06.850251+00:00",
+  "files": [
+   "services/payments/ledger/payout_monitor.py",
+   "services/payments/ledger/oncall.md"
+  ],
+  "commits": [
+   {
+    "message": "feat: add payout staleness monitor"
+   },
+   {
+    "message": "chore: tune on-call alert severity"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_005",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T18:03:31.886678+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 106,
+  "title": "Index ledger settlement query",
+  "body": "Speeds up month-end close query from 42s to 6s by adding composite index on (merchant_id, settled_at). Verified on read replica.",
+  "author": "p_001",
+  "created_at": "2026-09-17T16:43:43.163801+00:00",
+  "merged_at": "2026-09-17T22:54:05.238811+00:00",
+  "files": [
+   "services/payments/ledger/migrations.sql",
+   "services/payments/ledger/query_plan.txt"
+  ],
+  "commits": [
+   {
+    "message": "perf: add ledger settlement index"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 107,
+  "title": "Unify processor timeout policy",
+  "body": "H1 roadmap item. Standardizes Stripe/Adyen timeouts to 2s, adds jittered backoff. Prevents thread pool exhaustion seen in load test 9/20.",
+  "author": "p_001",
+  "created_at": "2026-09-23T13:53:28.847353+00:00",
+  "merged_at": "2026-09-25T05:55:35.559199+00:00",
+  "files": [
+   "services/payments/api/processor_client.py",
+   "services/payments/api/retry_policy.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: unify processor timeout policy"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-23T14:59:54.214980+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 101,
+  "title": "Add consumer lag instrumentation",
+  "body": "Added per-partition lag gauges and consumer-group age tracking. We were blind during the 8/12 peak when payments-events lag hit 3.2hrs.",
+  "author": "p_002",
+  "created_at": "2026-08-03T16:17:49.503519+00:00",
+  "merged_at": "2026-08-04T04:33:57.876058+00:00",
+  "files": [
+   "shared/kafka-client/metrics.ts",
+   "shared/kafka-client/lag_monitor.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: add per-partition lag metrics"
+   },
+   {
+    "message": "test: cover lag gauge emission"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 102,
+  "title": "Batch offset commits in kafka client",
+  "body": "Replace per-message commitSync with interval batched async commits. Cut commit overhead ~70% in staging and stopped the commit storm on payments-events-v2.",
+  "author": "p_002",
+  "created_at": "2026-08-12T12:16:04.923195+00:00",
+  "merged_at": "2026-08-14T09:51:45.524066+00:00",
+  "files": [
+   "shared/kafka-client/commit_manager.ts",
+   "shared/kafka-client/offset_batcher.ts"
+  ],
+  "commits": [
+   {
+    "message": "perf: batch offset commits on interval"
+   },
+   {
+    "message": "fix: flush pending offsets on revoke"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_005",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-12T12:51:04.089067+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 103,
+  "title": "Tune poll sizes and fetch config",
+  "body": "Raise max.poll.records 50->200 and tune fetch.max.bytes / max.partition.fetch.bytes for payments consumer. Tested against 9/02 replay, poll loop p99 down 410ms.",
+  "author": "p_002",
+  "created_at": "2026-08-21T12:40:14.435080+00:00",
+  "merged_at": "2026-08-22T08:55:04.721682+00:00",
+  "files": [
+   "shared/kafka-client/consumer_config.ts",
+   "shared/kafka-client/poller.ts"
+  ],
+  "commits": [
+   {
+    "message": "perf: tune poll and fetch sizes"
+   },
+   {
+    "message": "test: add poller throughput bench"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_001",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-21T13:33:48.669656+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 108,
+  "title": "Adopt batched client in payments consumer",
+  "body": "Switch payments consumer to new batched client and add pause/resume backpressure when ledger write queue >500. Prevents OOM during peak bursts.",
+  "author": "p_002",
+  "created_at": "2026-08-29T09:28:38.852959+00:00",
+  "merged_at": "2026-08-29T13:37:12.944869+00:00",
+  "files": [
+   "services/payments/consumer/payment_consumer.ts",
+   "services/payments/consumer/backpressure.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: migrate payments consumer to batched client"
+   },
+   {
+    "message": "fix: pause partitions on backpressure"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 104,
+  "title": "Fix rebalance storms on deploy",
+  "body": "Fix rebalance loop that spiked lag Sept 8. Use cooperative-sticky assignor and defer offset flush to onPartitionsRevoked, avoids duplicate fetch of 40k msgs.",
+  "author": "p_002",
+  "created_at": "2026-09-07T10:25:11.108379+00:00",
+  "merged_at": "2026-09-08T01:44:30.406196+00:00",
+  "files": [
+   "shared/kafka-client/rebalance_handler.ts",
+   "shared/kafka-client/consumer_config.ts"
+  ],
+  "commits": [
+   {
+    "message": "fix: use cooperative sticky assignor"
+   },
+   {
+    "message": "fix: handle rebalance without blocking poll"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_006",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T12:22:43.272568+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 105,
+  "title": "Async processing with partition ordering",
+  "body": "Move record processing to bounded worker pool (concurrency 16) so slow Stripe webhook enrichments don't block poll. Lag recovery 2.5hrs -> 18min in load test.",
+  "author": "p_002",
+  "created_at": "2026-09-14T16:08:00.453599+00:00",
+  "merged_at": "2026-09-14T23:33:06.848225+00:00",
+  "files": [
+   "shared/kafka-client/processor.ts",
+   "shared/kafka-client/worker_pool.ts"
+  ],
+  "commits": [
+   {
+    "message": "perf: add async processor with concurrency limit"
+   },
+   {
+    "message": "test: cover ordering per partition key"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_003",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T17:18:14.553565+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 106,
+  "title": "Docs for lag tuning defaults",
+  "body": "Document recommended poll/commit tuning for payments-events and ledger-postings. Captures values that held p99 commit lag <5s at 12k msg/sec.",
+  "author": "p_002",
+  "created_at": "2026-09-22T14:49:10.723466+00:00",
+  "merged_at": "2026-09-24T06:21:41.248536+00:00",
+  "files": [
+   "shared/kafka-client/README.md",
+   "shared/kafka-client/consumer_config.ts"
+  ],
+  "commits": [
+   {
+    "message": "docs: add kafka-client tuning guide"
+   },
+   {
+    "message": "chore: bump default commit interval to 5s"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 109,
+  "title": "Validate idempotency key format on charges",
+  "body": "Add strict format check for Idempotency-Key header on POST /v1/charges. Rejects missing/oversized keys with 422 to stop duplicate charges from retries.",
+  "author": "p_003",
+  "created_at": "2026-08-02T15:50:30.080258+00:00",
+  "merged_at": "2026-08-03T20:35:43.067361+00:00",
+  "files": [
+   "services/payments/api/idempotency.py",
+   "services/payments/api/validation.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add idempotency key format validation"
+   },
+   {
+    "message": "test: cover invalid and oversized key cases"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_001",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-02T17:17:04.904182+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 110,
+  "title": "Add idempotency support to refund endpoint",
+  "body": "Refund POST now requires Idempotency-Key and returns original response on replay within 24h. Prevents double refunds when dashboard retries timeouts.",
+  "author": "p_003",
+  "created_at": "2026-08-11T12:10:34.292095+00:00",
+  "merged_at": "2026-08-12T07:18:23.325170+00:00",
+  "files": [
+   "services/payments/api/refunds.py",
+   "services/payments/api/idempotency_store.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce idempotency on refund creation"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_001",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T14:07:48.041303+00:00"
+   },
+   {
+    "reviewer": "p_006",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T12:54:44.969970+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 111,
+  "title": "Fix race in idempotency key storage",
+  "body": "Store idempotency keys in Redis with 24h TTL + Postgres fallback. Fixes race where concurrent retries created two payment_intents.",
+  "author": "p_003",
+  "created_at": "2026-08-20T12:54:19.959388+00:00",
+  "merged_at": "2026-08-20T17:47:37.813644+00:00",
+  "files": [
+   "services/payments/api/idempotency_store.py",
+   "services/payments/api/redis_client.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: use lua lock for idempotency key insert"
+   },
+   {
+    "message": "test: add concurrent replay test"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_005",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-20T14:09:52.051094+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 112,
+  "title": "Return idempotency metadata on refunds",
+  "body": "GET /v1/refunds/:id and list endpoint now return idempotency_key, replayed flag, and original status code. Helps support debug duplicate webhook calls.",
+  "author": "p_003",
+  "created_at": "2026-08-29T16:48:38.486305+00:00",
+  "merged_at": "2026-08-30T04:17:05.249148+00:00",
+  "files": [
+   "services/payments/api/refunds.py",
+   "services/payments/api/serializers.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: expose idempotency metadata in refund responses"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 113,
+  "title": "Add retention cleanup for idempotency keys",
+  "body": "Nightly job deletes idempotency_keys older than 30 days, keeps refund-linked keys 90 days for audit. Cut table from 41M to 18M rows in staging.",
+  "author": "p_003",
+  "created_at": "2026-09-07T11:50:39.480772+00:00",
+  "merged_at": "2026-09-08T09:30:48.766591+00:00",
+  "files": [
+   "services/payments/api/cleanup.py",
+   "services/payments/api/config.py"
+  ],
+  "commits": [
+   {
+    "message": "chore: add idempotency key retention cleanup"
+   },
+   {
+    "message": "test: add retention window tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_002",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T12:23:59.007270+00:00"
+   },
+   {
+    "reviewer": "p_006",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T13:00:46.933656+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 114,
+  "title": "Fix partial refund over-refund bug",
+  "body": "Partial refunds now validate amount <= remaining refundable and lock charge row. Returns 409 on concurrent refund attempts instead of 500.",
+  "author": "p_003",
+  "created_at": "2026-09-17T14:46:27.561493+00:00",
+  "merged_at": "2026-09-18T19:42:36.606090+00:00",
+  "files": [
+   "services/payments/api/refunds.py",
+   "services/payments/api/validation.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: validate partial refund amounts atomically"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T16:20:03.878662+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 115,
+  "title": "Improve refund processor error mapping",
+  "body": "Refund failures from Stripe now map to 502 with retryable flag and preserve idempotency key for safe retry. Updated runbook link in error body.",
+  "author": "p_003",
+  "created_at": "2026-09-24T13:39:43.289961+00:00",
+  "merged_at": "2026-09-25T05:27:04.704642+00:00",
+  "files": [
+   "services/payments/api/refunds.py",
+   "services/payments/api/errors.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: map processor errors on refund endpoint"
+   },
+   {
+    "message": "docs: update refund error codes"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 116,
+  "title": "Fix rounding drift in July close job",
+  "body": "Fixed 1-cent rounding drift in July close that left $412 imbalance in acct 4001. Now rounds at line-item level to match Stripe payouts.",
+  "author": "p_004",
+  "created_at": "2026-08-02T10:55:56.870932+00:00",
+  "merged_at": "2026-08-03T21:05:10.349158+00:00",
+  "files": [
+   "services/payments/ledger/close_reconciler.py",
+   "services/payments/ledger/balance_check.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: correct rounding in month-end balance aggregation"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 117,
+  "title": "Add double-entry check for refunds",
+  "body": "Adds debit=credit invariant check for refund entries before posting. Caught 23 bad entries in staging from the Adyen backfill.",
+  "author": "p_004",
+  "created_at": "2026-08-11T15:20:05.020491+00:00",
+  "merged_at": "2026-08-12T19:45:29.586910+00:00",
+  "files": [
+   "services/payments/ledger/entries_validator.py",
+   "services/payments/ledger/refund_poster.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add double-entry validation for refund postings"
+   },
+   {
+    "message": "test: cover unbalanced refund cases"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_001",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T17:13:59.153689+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 118,
+  "title": "Refactor August month-end close job",
+  "body": "Split August close into fetch, match, settle stages. Runtime dropped from 4.2h to 2.6h in staging. No logic change, just job structure for on-call clarity.",
+  "author": "p_004",
+  "created_at": "2026-08-21T13:05:09.340690+00:00",
+  "merged_at": "2026-08-23T07:20:32.109957+00:00",
+  "files": [
+   "services/payments/ledger/month_end_close.py",
+   "services/payments/ledger/close_stages.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: split month-end close into staged jobs"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 119,
+  "title": "Speed up nightly reconciliation scan",
+  "body": "Reconciliation was scanning full ledger table nightly. Now uses indexed posted_at window + checkpoint cursor. P95 went 18m to 6m.",
+  "author": "p_004",
+  "created_at": "2026-08-30T11:27:06.975664+00:00",
+  "merged_at": "2026-08-31T02:41:49.469530+00:00",
+  "files": [
+   "services/payments/ledger/reconciliation_runner.py",
+   "services/payments/ledger/checkpoint_store.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: add checkpoint cursor to reconciliation scan"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 120,
+  "title": "Add audit trail to close adjustments",
+  "body": "Every close adjustment now writes who/when/why to ledger_adjustments. Needed for Q3 audit with PwC. Backfilled July entries.",
+  "author": "p_004",
+  "created_at": "2026-09-08T09:26:45.964392+00:00",
+  "merged_at": "2026-09-08T16:52:37.657271+00:00",
+  "files": [
+   "services/payments/ledger/adjustment_log.py",
+   "services/payments/ledger/close_report.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add audit trail for close adjustments"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_002",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T10:21:06.785169+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 121,
+  "title": "Fix missing payouts in reconciliation",
+  "body": "Sep 4 run missed 187 payout entries due to null merchant_id filter. Fixed predicate and added alert if matched_count drops >5% WoW.",
+  "author": "p_004",
+  "created_at": "2026-09-17T13:56:33.062733+00:00",
+  "merged_at": "2026-09-19T02:46:15.600669+00:00",
+  "files": [
+   "services/payments/ledger/match_engine.py",
+   "services/payments/ledger/reconciliation_alerts.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: handle null merchant_id in reconciliation filter"
+   },
+   {
+    "message": "test: add regression for missing payout entries"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 122,
+  "title": "Add dry-run mode for month-end close",
+  "body": "Lets accountants preview Sept close without posting. Flag is CLOSE_DRY_RUN=true. Sofia asked for this before the 9/30 freeze.",
+  "author": "p_004",
+  "created_at": "2026-09-23T16:04:17.845402+00:00",
+  "merged_at": "2026-09-24T16:33:50.134841+00:00",
+  "files": [
+   "services/payments/ledger/close_dryrun.py",
+   "services/payments/ledger/close_config.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add dry-run mode to month-end close"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 123,
+  "title": "Vault-backed card tokenization",
+  "body": "Switched card tokenize path to use Stripe Vault with local fallback. Cuts raw PAN retention and unblocks PCI DSS 4.0 Req 3 audit next week.",
+  "author": "p_005",
+  "created_at": "2026-08-03T16:58:25.830997+00:00",
+  "merged_at": "2026-08-05T01:42:42.376839+00:00",
+  "files": [
+   "services/payments/api/tokenization.py",
+   "services/payments/api/vault_client.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: integrate vault tokenization in payments API"
+   },
+   {
+    "message": "test: add vault tokenize fallback coverage"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 124,
+  "title": "Audit logging for token endpoints",
+  "body": "Added structured audit logs for tokenize/detokenize calls with request_id, actor, and latency. Logs ship to Splunk for Q3 PCI evidence.",
+  "author": "p_005",
+  "created_at": "2026-08-11T11:10:15.359053+00:00",
+  "merged_at": "2026-08-12T15:31:48.454763+00:00",
+  "files": [
+   "services/payments/api/audit_logger.py",
+   "services/payments/api/middleware.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add audit logging for tokenization endpoints"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T12:37:29.634577+00:00"
+   },
+   {
+    "reviewer": "p_006",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T13:06:49.006333+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 125,
+  "title": "Fix PAN leak in audit logs",
+  "body": "PANs were showing in error responses and audit context on 500s. Now masks to last4 + BIN before logging. Verified with Maya in staging.",
+  "author": "p_005",
+  "created_at": "2026-08-21T10:17:01.239019+00:00",
+  "merged_at": "2026-08-22T02:42:57.827147+00:00",
+  "files": [
+   "services/payments/api/sanitizer.py",
+   "services/payments/api/audit_logger.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: mask PAN in audit logs and error handler"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 126,
+  "title": "Track token encryption key version",
+  "body": "Token metadata table was missing key_id and rotation date. Backfill script covered 1.2M tokens, p99 query still 42ms. Needed for auditor walkthrough.",
+  "author": "p_005",
+  "created_at": "2026-08-30T11:43:30.493451+00:00",
+  "merged_at": "2026-08-31T17:03:58.145100+00:00",
+  "files": [
+   "services/payments/api/token_store.py",
+   "services/payments/api/models.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add key rotation fields to token store"
+   },
+   {
+    "message": "chore: backfill key metadata"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 127,
+  "title": "Harden detokenize auth checks",
+  "body": "Detokenize endpoint allowed expired service tokens to read vault refs. Now enforces 15-min TTL and scope check, logs denied attempts for audit.",
+  "author": "p_005",
+  "created_at": "2026-09-07T12:38:54.018117+00:00",
+  "merged_at": "2026-09-08T11:38:01.620981+00:00",
+  "files": [
+   "services/payments/api/auth.py",
+   "services/payments/api/tokenization.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: enforce TTL and scope on detokenize"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T13:39:44.623094+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 128,
+  "title": "Batch audit log writes",
+  "body": "Refactored audit writer to async batch flush to reduce API latency. p95 dropped from 210ms to 95ms on tokenize load test with David.",
+  "author": "p_005",
+  "created_at": "2026-09-16T10:34:03.927921+00:00",
+  "merged_at": "2026-09-18T08:01:23.117271+00:00",
+  "files": [
+   "services/payments/api/audit_logger.py",
+   "services/payments/api/config.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: batch audit log writes"
+   },
+   {
+    "message": "test: add batch flush tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 129,
+  "title": "Add PCI audit export",
+  "body": "Adds PCI evidence export for Sept audit: token lifecycle + access logs CSV. Reviewed format with Sofia, matches auditor template v2.3.",
+  "author": "p_005",
+  "created_at": "2026-09-23T13:29:40.967882+00:00",
+  "merged_at": "2026-09-24T22:02:44.573109+00:00",
+  "files": [
+   "services/payments/api/audit_export.py",
+   "services/payments/api/routes.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add PCI audit export endpoint"
+   },
+   {
+    "message": "docs: document audit export API"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 130,
+  "title": "Add multi-currency columns to ledger schema",
+  "body": "Adds currency_code, fx_rate_used and settled_base_amount_cents to ledger_entries. Defaults existing rows to USD/1.0. Needed for EUR, GBP, BRL settlement next sprint.",
+  "author": "p_006",
+  "created_at": "2026-08-03T16:48:07.720485+00:00",
+  "merged_at": "2026-08-05T03:04:14.799213+00:00",
+  "files": [
+   "services/payments/ledger/schema.sql",
+   "services/payments/ledger/migrate_014.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add fx columns to ledger entries"
+   },
+   {
+    "message": "test: cover USD backfill migration"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_002",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T18:30:27.586787+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 131,
+  "title": "Integrate hourly FX feed with cache",
+  "body": "Pulls hourly spot rates from OANDA feed, caches in Redis with 55m TTL. Falls back to last-good rate and pages if stale >6h. Cuts p95 FX lookup from 180ms to 12ms.",
+  "author": "p_006",
+  "created_at": "2026-08-12T12:06:37.688990+00:00",
+  "merged_at": "2026-08-14T11:47:34.376566+00:00",
+  "files": [
+   "services/payments/ledger/fx_provider.py",
+   "services/payments/ledger/fx_cache.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add OANDA fx feed client"
+   },
+   {
+    "message": "perf: cache fx rates in redis"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "payments",
+  "number": 132,
+  "title": "Fix minor-unit rounding for JPY and others",
+  "body": "Handles zero-decimal JPY/KRW and 3-decimal BHD/JOD per ISO 4217. Fixes 1-yen overcharge seen in staging on Aug 28. Adds unit tests for all 12 launch currencies.",
+  "author": "p_006",
+  "created_at": "2026-08-21T10:42:43.566146+00:00",
+  "merged_at": "2026-08-22T01:48:12.586261+00:00",
+  "files": [
+   "services/payments/ledger/amount_converter.py",
+   "services/payments/ledger/currency_rules.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: handle zero-decimal currencies in converter"
+   },
+   {
+    "message": "test: add minor-unit cases for JPY KRW BHD"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_003",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-21T12:11:58.495881+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 133,
+  "title": "Enforce FX quote expiry on posting",
+  "body": "Enforces 30s quote expiry on ledger writes. Rejects postings with expired fx_quote_id and logs rate drift >0.3%. Prevents stale-rate double-spend we saw Aug 19.",
+  "author": "p_006",
+  "created_at": "2026-08-30T14:12:04.206458+00:00",
+  "merged_at": "2026-08-31T22:57:33.096208+00:00",
+  "files": [
+   "services/payments/ledger/posting_validator.py",
+   "services/payments/ledger/quote_store.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce fx quote expiry on post"
+   },
+   {
+    "message": "fix: reject stale quotes with 409"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-30T16:10:29.385376+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 134,
+  "title": "Add currency validation to charges API",
+  "body": "Validates currency_code and fx_quote_id on POST /v1/charges. Returns 422 for unsupported codes like ARS. Keeps ledger as source of truth for conversion math.",
+  "author": "p_006",
+  "created_at": "2026-09-08T17:06:25.187672+00:00",
+  "merged_at": "2026-09-09T16:20:41.927083+00:00",
+  "files": [
+   "services/payments/api/charges.py",
+   "services/payments/api/validators.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: validate currency on charges API"
+   },
+   {
+    "message": "test: cover unsupported currency 422"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_002",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T19:05:55.482190+00:00"
+   },
+   {
+    "reviewer": "p_003",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T17:58:31.857078+00:00"
+   },
+   {
+    "reviewer": "p_004",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T18:51:19.535006+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 135,
+  "title": "Add FX reconciliation check",
+  "body": "Adds nightly job to reconcile converted totals vs base totals. Emits fx_reconciliation_diff_cents metric to Datadog. Alert if abs diff >$5 over 24h window.",
+  "author": "p_006",
+  "created_at": "2026-09-17T15:56:35.206687+00:00",
+  "merged_at": "2026-09-17T23:19:46.270253+00:00",
+  "files": [
+   "services/payments/ledger/reconciliation.py",
+   "services/payments/ledger/metrics.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add fx reconciliation job"
+   },
+   {
+    "message": "chore: add datadog metric for diff"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_001",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T16:42:53.394912+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "payments",
+  "number": 136,
+  "title": "Fix duplicate FX postings in settlement",
+  "body": "Makes FX settlement consumer idempotent on ledger_entry_id + fx_quote_id. Retries safely on OANDA 429s with backoff. Fixes duplicate EUR postings from Sept 18 replay.",
+  "author": "p_006",
+  "created_at": "2026-09-24T16:48:57.112723+00:00",
+  "merged_at": "2026-09-26T06:09:16.495614+00:00",
+  "files": [
+   "services/payments/consumer/settlement.py",
+   "services/payments/consumer/retry.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: dedupe fx settlement writes"
+   },
+   {
+    "message": "perf: backoff on fx provider 429"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 101,
+  "title": "Add delivery SLO dashboard config",
+  "body": "Added SLO dashboard for delivery p99 latency and success rate. Tracks 99.9% target agreed in Aug reliability review. Feeds Datadog screen for oncall.",
+  "author": "p_007",
+  "created_at": "2026-08-02T16:15:10.001606+00:00",
+  "merged_at": "2026-08-03T05:38:35.018066+00:00",
+  "files": [
+   "services/messaging/delivery/slo_dashboard.json",
+   "services/messaging/delivery/delivery_slos.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add delivery SLO dashboard config"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_008",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-02T16:58:06.873369+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 102,
+  "title": "Fix queue depth alert thresholds",
+  "body": "Lowered queue-depth alerts from 50k to 20k after Sept 2 incident missed page. Reduces time-to-detect by ~8 min. Validated with Kevin on staging.",
+  "author": "p_007",
+  "created_at": "2026-08-13T14:09:35.648550+00:00",
+  "merged_at": "2026-08-15T08:14:43.127465+00:00",
+  "files": [
+   "services/messaging/queue/alert_thresholds.yaml",
+   "services/messaging/queue/queue_monitor.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: lower queue depth alert thresholds"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_011",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-13T16:05:57.035336+00:00"
+   },
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-13T15:46:56.281549+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 103,
+  "title": "Refactor notifications retry runbook",
+  "body": "Rewrote retry runbook with clear steps for poison messages and DLQ replay. Adds PagerDuty links and rollback checks from last reliability review.",
+  "author": "p_007",
+  "created_at": "2026-08-22T16:38:34.258525+00:00",
+  "merged_at": "2026-08-23T15:18:19.692122+00:00",
+  "files": [
+   "services/messaging/notifications/retry_runbook.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: refactor notifications retry runbook"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-22T18:11:39.946292+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 104,
+  "title": "Add reliability review action tracker",
+  "body": "Added tracker for 12 actions from Sept reliability review. Owners and due dates included. Will review progress with Maya Chen on Fridays.",
+  "author": "p_007",
+  "created_at": "2026-08-31T12:53:31.130617+00:00",
+  "merged_at": "2026-09-02T07:31:39.492276+00:00",
+  "files": [
+   "services/messaging/delivery/reliability_actions.md",
+   "services/messaging/delivery/review_checklist.md"
+  ],
+  "commits": [
+   {
+    "message": "chore: add reliability review action tracker"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-31T14:35:18.697398+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 105,
+  "title": "Update delivery oncall handoff doc",
+  "body": "Updated handoff doc for delivery oncall. Clarified escalation to secondary after 15 min and added recent incident links. For Grace and Omar rotation.",
+  "author": "p_007",
+  "created_at": "2026-09-08T10:43:59.740670+00:00",
+  "merged_at": "2026-09-10T04:28:35.568852+00:00",
+  "files": [
+   "services/messaging/delivery/oncall_handoff.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: update delivery oncall handoff"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 106,
+  "title": "Tune queue worker concurrency",
+  "body": "Bumped queue worker concurrency from 32 to 48 per host based on load test Sept 14. CPU still under 62%. Improves drain time ~22% without extra hosts.",
+  "author": "p_007",
+  "created_at": "2026-09-16T15:03:36.473342+00:00",
+  "merged_at": "2026-09-17T12:09:49.576592+00:00",
+  "files": [
+   "services/messaging/queue/worker_config.yaml",
+   "services/messaging/queue/concurrency_tuner.go"
+  ],
+  "commits": [
+   {
+    "message": "perf: tune queue worker concurrency"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_008",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-16T16:26:25.197295+00:00"
+   },
+   {
+    "reviewer": "p_009",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-16T16:52:43.563087+00:00"
+   },
+   {
+    "reviewer": "p_011",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-16T16:30:56.920678+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 107,
+  "title": "Docs: Q3 roadmap milestones",
+  "body": "Documented Q3 roadmap milestones for notifications: template versioning, audit logging, regional failover drill Oct 10. Aligned with team planning.",
+  "author": "p_007",
+  "created_at": "2026-09-22T14:25:02.390438+00:00",
+  "merged_at": "2026-09-24T09:05:24.722622+00:00",
+  "files": [
+   "services/messaging/notifications/roadmap_q3.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: add Q3 roadmap milestones"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 108,
+  "title": "Add backlog depth gauge for notifications",
+  "body": "Added Prometheus gauge for notifications queue depth + drain rate. We couldn't see how fast the backlog was growing during 6pm peak, now we can alert at 200k pending.",
+  "author": "p_008",
+  "created_at": "2026-08-03T09:37:32.341326+00:00",
+  "merged_at": "2026-08-03T18:34:04.843325+00:00",
+  "files": [
+   "services/messaging/queue/backlog_metrics.py",
+   "services/messaging/queue/queue_depth_exporter.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add backlog depth gauge for notifications queue"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 107,
+  "title": "Throttle offset commits in kafka-client",
+  "body": "Found offset commits were firing every 500ms even with no progress, hammering the coordinator. Switched to commit on processed batch + 5s interval. Cuts commit QPS by ~80% in staging.",
+  "author": "p_008",
+  "created_at": "2026-08-11T15:52:39.929419+00:00",
+  "merged_at": "2026-08-12T04:32:51.986564+00:00",
+  "files": [
+   "shared/kafka-client/offset_manager.py",
+   "shared/kafka-client/commit_policy.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: throttle offset commits to batch completion"
+   },
+   {
+    "message": "test: add offset commit interval tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T17:22:00.146661+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 109,
+  "title": "Tune dispatcher prefetch for peak drain",
+  "body": "Peak backlog on Aug 18 took 3.5h to drain. Bumped prefetch from 200 to 500 and added backpressure check. Drain test with 1.2M synthetic push events improved 34%.",
+  "author": "p_008",
+  "created_at": "2026-08-20T15:25:14.920790+00:00",
+  "merged_at": "2026-08-21T15:43:44.748935+00:00",
+  "files": [
+   "services/messaging/notifications/dispatcher.py",
+   "services/messaging/notifications/batch_config.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: increase prefetch and add backpressure check"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_007",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-20T16:25:25.717823+00:00"
+   },
+   {
+    "reviewer": "p_009",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-20T16:24:36.048462+00:00"
+   },
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-20T16:59:35.980189+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 110,
+  "title": "Add peak backlog replay harness",
+  "body": "Repro for messages piling up: replays Sept 2 peak traffic against local Kafka. Confirms backlog grows when commit retries block poll loop for >30s.",
+  "author": "p_008",
+  "created_at": "2026-08-29T12:34:28.243093+00:00",
+  "merged_at": "2026-08-30T02:39:39.083249+00:00",
+  "files": [
+   "services/messaging/queue/replay_harness.py",
+   "services/messaging/queue/load_generator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add peak backlog replay harness"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 108,
+  "title": "Surface commit failures in kafka-client",
+  "body": "Commit failures were swallowed, so failed offsets looked committed and messages piled up after rebalance. Now log broker error code and force recommit before next poll.",
+  "author": "p_008",
+  "created_at": "2026-09-07T17:15:17.104223+00:00",
+  "merged_at": "2026-09-08T14:31:34.644809+00:00",
+  "files": [
+   "shared/kafka-client/commit_retry.py",
+   "shared/kafka-client/error_handler.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: surface offset commit errors and force recommit"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 111,
+  "title": "Enable delivery spillover for backlog",
+  "body": "Delivery workers were idling while notifications backlog hit 450k. Added spillover to borrow 10 delivery consumers when queue depth >150k for 5m.",
+  "author": "p_008",
+  "created_at": "2026-09-15T14:20:00.497101+00:00",
+  "merged_at": "2026-09-16T18:23:06.603747+00:00",
+  "files": [
+   "services/messaging/delivery/spillover_controller.py",
+   "services/messaging/delivery/worker_pool.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enable delivery spillover for notifications backlog"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 112,
+  "title": "Update backlog triage runbook",
+  "body": "Updates runbook with backlog triage steps: check Grafana queue-depth, Kafka coordinator latency, recent deploys. Links to Aug 28 incident where backlog took 2h to drain.",
+  "author": "p_008",
+  "created_at": "2026-09-22T09:39:45.779745+00:00",
+  "merged_at": "2026-09-23T19:25:31.529367+00:00",
+  "files": [
+   "services/messaging/queue/RUNBOOK.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: update notifications backlog runbook"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 113,
+  "title": "Fallback to en-US for missing templates",
+  "body": "Added fallback to en-US when a locale template is missing. Prevents blank pushes we saw in the Aug canary for fr-CA and pt-BR.",
+  "author": "p_009",
+  "created_at": "2026-08-02T13:09:48.846728+00:00",
+  "merged_at": "2026-08-03T19:34:22.206030+00:00",
+  "files": [
+   "services/messaging/notifications/template_renderer.py",
+   "services/messaging/notifications/fallback.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add en-US fallback for missing locale templates"
+   },
+   {
+    "message": "test: cover missing locale fallback cases"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_011",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-02T13:43:34.902075+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 114,
+  "title": "Fix plural rules for ar/he pushes",
+  "body": "Fixed Arabic and Hebrew plural handling in push body. Was using English rules, broke counts for 2+. Verified with native reviewer strings.",
+  "author": "p_009",
+  "created_at": "2026-08-11T11:52:40.437625+00:00",
+  "merged_at": "2026-08-11T16:21:41.660743+00:00",
+  "files": [
+   "services/messaging/notifications/plurals.py",
+   "services/messaging/notifications/localization.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: use CLDR plural rules for ar and he push templates"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-11T13:07:56.481308+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 115,
+  "title": "Migrate 3 locales to v3 template schema",
+  "body": "Moved Hindi, Spanish, Portuguese templates to v3 layout with title/body/cta fields. Old v2 still renders for rollback safety.",
+  "author": "p_009",
+  "created_at": "2026-08-20T10:05:28.449310+00:00",
+  "merged_at": "2026-08-21T23:58:11.396971+00:00",
+  "files": [
+   "services/messaging/delivery/push_templates.json",
+   "services/messaging/delivery/template_migrator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: migrate hi/es/pt templates to v3 schema"
+   },
+   {
+    "message": "test: add v3 migration tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 116,
+  "title": "Add per-locale push length checks",
+  "body": "Added length guard per locale after German and Japanese pushes got clipped on Android 14. Truncates with ellipsis and logs metric.",
+  "author": "p_009",
+  "created_at": "2026-08-29T10:17:29.020297+00:00",
+  "merged_at": "2026-08-31T00:59:36.809167+00:00",
+  "files": [
+   "services/messaging/notifications/validator.py",
+   "services/messaging/notifications/limits.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add per-locale push length limits"
+   },
+   {
+    "message": "fix: truncate de/ja without breaking placeholders"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 117,
+  "title": "Parameterized onboarding push templates",
+  "body": "Allowed marketing to pass template_id + locale params for onboarding drip. Validates against allowlist to avoid bad renders.",
+  "author": "p_009",
+  "created_at": "2026-09-07T14:08:54.487482+00:00",
+  "merged_at": "2026-09-08T10:30:05.382114+00:00",
+  "files": [
+   "services/messaging/queue/template_dispatcher.py",
+   "services/messaging/queue/payload_builder.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: support parameterized templates for onboarding"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T15:25:04.586021+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 118,
+  "title": "Preserve RTL markers in titles",
+  "body": "Fixed RTL markers getting stripped in Arabic and Urdu titles. Keeps \\u200F wrapping so Samsung dialers display correctly.",
+  "author": "p_009",
+  "created_at": "2026-09-16T16:27:33.131701+00:00",
+  "merged_at": "2026-09-17T23:38:11.483779+00:00",
+  "files": [
+   "services/messaging/notifications/bidi_formatter.py",
+   "services/messaging/notifications/template_renderer.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: preserve RTL isolates in push titles"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 119,
+  "title": "Preview API for localized pushes",
+  "body": "Added dry-run preview endpoint for localized pushes. Elena asked for this to QA French promo copy before Sept 24 send.",
+  "author": "p_009",
+  "created_at": "2026-09-23T16:47:22.262737+00:00",
+  "merged_at": "2026-09-23T21:53:15.027921+00:00",
+  "files": [
+   "services/messaging/notifications/preview.py",
+   "services/messaging/notifications/preview_api.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add preview endpoint for localized templates"
+   },
+   {
+    "message": "docs: document preview API usage"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_007",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-23T17:42:28.478647+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 120,
+  "title": "Fix read receipt seq regression on rapid reads",
+  "body": "Fixed race where rapid read events overwrote newer seq with older. Now uses CAS on last_read_seq and emits only monotonic updates to clients.",
+  "author": "p_010",
+  "created_at": "2026-08-03T15:37:02.620259+00:00",
+  "merged_at": "2026-08-04T01:05:00.028154+00:00",
+  "files": [
+   "services/messaging/delivery/receipt_store.py",
+   "services/messaging/delivery/receipt_fanout.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: use CAS for last_read_seq updates"
+   },
+   {
+    "message": "test: add concurrent receipt ingestion test"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_009",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T17:11:28.984835+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 121,
+  "title": "Add gapless per-conversation sequencer",
+  "body": "Adds per-conversation sequencer that assigns gapless seq_no on ingest. Backfills missing seq check and drops out-of-order retries to DLQ after 3 attempts.",
+  "author": "p_010",
+  "created_at": "2026-08-12T14:34:01.454816+00:00",
+  "merged_at": "2026-08-12T18:59:07.974820+00:00",
+  "files": [
+   "services/messaging/delivery/sequencer.py",
+   "services/messaging/delivery/sequence_validator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add conversation sequencer with gapless seq"
+   },
+   {
+    "message": "test: cover out-of-order and retry paths"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_007",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-12T15:20:29.427409+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 122,
+  "title": "Cache read receipts to cut thread open latency",
+  "body": "Receipts were N+1 querying Postgres on thread open. Added Redis hash cache with 30s TTL, cut p95 thread-open latency from 380ms to 95ms in staging.",
+  "author": "p_010",
+  "created_at": "2026-08-21T17:17:08.281481+00:00",
+  "merged_at": "2026-08-22T02:14:37.754266+00:00",
+  "files": [
+   "services/messaging/delivery/receipt_cache.py",
+   "services/messaging/delivery/receipt_api.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: cache read receipts in redis hash"
+   },
+   {
+    "message": "test: add cache hit-miss tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_008",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-21T18:22:35.766140+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 123,
+  "title": "Push read receipt updates over websocket",
+  "body": "Clients were polling receipts every 5s. Added WS push for receipt updates scoped to conversation members, includes dedupe by event_id.",
+  "author": "p_010",
+  "created_at": "2026-08-29T16:28:32.826201+00:00",
+  "merged_at": "2026-08-30T11:12:06.629290+00:00",
+  "files": [
+   "services/messaging/delivery/receipt_push.py",
+   "services/messaging/delivery/receipt_events.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: push receipt updates over websocket"
+   },
+   {
+    "message": "fix: dedupe receipt push events"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 124,
+  "title": "Bound reorder buffer with timed flush",
+  "body": "Reorder buffer was unbounded during partition blips on Aug 28. Added 500-msg cap with 2s flush timeout and metric delivery.reorder_buffer_flushes.",
+  "author": "p_010",
+  "created_at": "2026-09-07T17:05:00.574464+00:00",
+  "merged_at": "2026-09-09T11:18:10.016157+00:00",
+  "files": [
+   "services/messaging/delivery/reorder_buffer.py",
+   "services/messaging/delivery/delivery_metrics.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: bound reorder buffer with timed flush"
+   },
+   {
+    "message": "chore: add buffer flush metric"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 125,
+  "title": "Per-member watermarks for group read receipts",
+  "body": "Group chats showed 1:1 last-read logic. Changed to per-member watermark map and fixed unread count to exclude own messages and deleted msgs.",
+  "author": "p_010",
+  "created_at": "2026-09-17T12:22:29.813152+00:00",
+  "merged_at": "2026-09-17T21:12:29.773523+00:00",
+  "files": [
+   "services/messaging/delivery/group_receipts.py",
+   "services/messaging/delivery/unread_counter.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: per-member watermarks for group receipts"
+   },
+   {
+    "message": "fix: correct unread count for groups"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_007",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T13:00:02.822180+00:00"
+   },
+   {
+    "reviewer": "p_009",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T13:51:40.548988+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 126,
+  "title": "Add ordering and receipt invariant checks",
+  "body": "Added invariant checks for seq continuity and receipt monotonicity in delivery worker. Alerts to #messaging-infra if gap >10 or regression detected.",
+  "author": "p_010",
+  "created_at": "2026-09-24T15:16:09.976611+00:00",
+  "merged_at": "2026-09-25T09:14:57.685437+00:00",
+  "files": [
+   "services/messaging/delivery/delivery_checks.py",
+   "services/messaging/delivery/README.md"
+  ],
+  "commits": [
+   {
+    "message": "feat: add delivery invariant checks"
+   },
+   {
+    "message": "docs: document ordering guarantees"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 127,
+  "title": "Enforce quiet hours in delivery path",
+  "body": "Added QuietHoursEvaluator to delivery path to suppress push/SMS between 22:00-07:00 user-local. Falls back to UTC when timezone missing. Cuts night complaints.",
+  "author": "p_011",
+  "created_at": "2026-08-03T14:22:27.092942+00:00",
+  "merged_at": "2026-08-03T22:01:29.766356+00:00",
+  "files": [
+   "services/messaging/delivery/quiet_hours.py",
+   "services/messaging/delivery/dispatcher.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add quiet hours check to delivery dispatcher"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T14:52:44.990308+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 128,
+  "title": "Add per-channel preference overrides",
+  "body": "Added per-channel opt-in/out overrides for push, email, SMS. Defaults inherit global preference. Migrates existing 2.1M rows with backfill script.",
+  "author": "p_011",
+  "created_at": "2026-08-12T10:29:45.616517+00:00",
+  "merged_at": "2026-08-14T10:10:43.427231+00:00",
+  "files": [
+   "services/messaging/notifications/preferences.py",
+   "services/messaging/notifications/models.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add per-channel preference overrides"
+   },
+   {
+    "message": "test: cover channel override resolution"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_007",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-12T11:58:48.113022+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 129,
+  "title": "Defer quiet-hours messages to morning",
+  "body": "Defer messages arriving in quiet hours to queue with wake-up at window end. Uses user timezone, max defer 9h. Prevents drops and keeps ordering.",
+  "author": "p_011",
+  "created_at": "2026-08-21T13:33:34.503576+00:00",
+  "merged_at": "2026-08-22T13:48:57.522679+00:00",
+  "files": [
+   "services/messaging/queue/deferral.py",
+   "services/messaging/queue/scheduler.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: defer quiet-hours messages in queue"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 130,
+  "title": "Fix quiet hours bypass for alerts",
+  "body": "Fixed bypass where critical alerts ignored quiet hours flag. Now only priority P0 with user opt-in breaks through. Added audit log for breakthroughs.",
+  "author": "p_011",
+  "created_at": "2026-08-30T16:36:01.521747+00:00",
+  "merged_at": "2026-08-30T23:18:03.791080+00:00",
+  "files": [
+   "services/messaging/notifications/quiet_hours.py",
+   "services/messaging/notifications/policy.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: respect quiet hours for non-critical alerts"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_012",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-30T17:54:11.600744+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 131,
+  "title": "Add quiet hours preference API",
+  "body": "New PUT /v1/preferences/quiet-hours to set windows per weekday/weekend. Validates ranges, stores in Postgres. Needed for iOS settings screen v4.2.",
+  "author": "p_011",
+  "created_at": "2026-09-11T14:32:47.087859+00:00",
+  "merged_at": "2026-09-12T04:43:30.829127+00:00",
+  "files": [
+   "services/messaging/notifications/api.py",
+   "services/messaging/notifications/validators.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add quiet hours preference API"
+   },
+   {
+    "message": "test: add API validation tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 132,
+  "title": "Cache preferences in delivery worker",
+  "body": "Batch fetch preferences in delivery worker to cut p99 from 310ms to 95ms. Caches for 60s per user. Invalidates on preference update event.",
+  "author": "p_011",
+  "created_at": "2026-09-18T10:39:23.965110+00:00",
+  "merged_at": "2026-09-18T20:04:58.199013+00:00",
+  "files": [
+   "services/messaging/delivery/pref_cache.py",
+   "services/messaging/delivery/worker.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: batch preference lookup in delivery"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-18T11:54:53.886699+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 133,
+  "title": "Fix weekend quiet hours timezone bug",
+  "body": "Weekend vs weekday quiet hours were swapped for EU users due to tz offset bug. Fixed conversion using IANA tz DB and added regression tests.",
+  "author": "p_011",
+  "created_at": "2026-09-23T17:06:09.843234+00:00",
+  "merged_at": "2026-09-25T14:50:53.054102+00:00",
+  "files": [
+   "services/messaging/notifications/timezone.py",
+   "services/messaging/notifications/quiet_hours.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: correct weekend quiet hours for EU timezones"
+   },
+   {
+    "message": "test: add EU timezone cases"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 134,
+  "title": "Add Twilio secondary for SMS failover",
+  "body": "Add Twilio as secondary SMS with automatic cutover on 5xx/timeout. Keeps OTP delivery under 8s p95 during primary outage.",
+  "author": "p_012",
+  "created_at": "2026-08-02T13:03:41.187023+00:00",
+  "merged_at": "2026-08-02T21:48:18.567465+00:00",
+  "files": [
+   "services/messaging/delivery/sms_failover.py",
+   "services/messaging/delivery/provider_config.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add Twilio secondary SMS provider with auto-cutover"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 135,
+  "title": "Fix SES fallback on SendGrid rate limits",
+  "body": "SES was not kicking in when SendGrid 429 spiked Aug 12. Now trip after 50 errors/min and hold for 5 min before retry.",
+  "author": "p_012",
+  "created_at": "2026-08-10T12:56:31.634135+00:00",
+  "merged_at": "2026-08-10T16:11:09.870715+00:00",
+  "files": [
+   "services/messaging/delivery/email_failover.py",
+   "services/messaging/delivery/failover_policy.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: correct SES fallback trigger on SendGrid 429s"
+   },
+   {
+    "message": "test: add fallback trigger coverage for 429 burst"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 136,
+  "title": "Add health probes for email/SMS vendors",
+  "body": "Poll SendGrid, SES, Twilio, Telesign every 30s and cache status in Redis. Failover now uses fresh health vs stale config.",
+  "author": "p_012",
+  "created_at": "2026-08-19T13:03:45.448101+00:00",
+  "merged_at": "2026-08-21T12:04:25.253895+00:00",
+  "files": [
+   "services/messaging/delivery/health_probe.py",
+   "services/messaging/delivery/provider_registry.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add provider health probe loop"
+   },
+   {
+    "message": "chore: wire health status to failover decision"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-19T14:55:38.841427+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 137,
+  "title": "Tune circuit breaker per channel",
+  "body": "Split thresholds: SMS trips at 15% failure over 2 min, email at 25% over 5 min. Stops flapping we saw on Aug 30 with Telesign.",
+  "author": "p_012",
+  "created_at": "2026-08-27T10:22:51.239128+00:00",
+  "merged_at": "2026-08-28T20:24:21.426874+00:00",
+  "files": [
+   "services/messaging/delivery/circuit_breaker.py",
+   "services/messaging/delivery/failover_policy.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: per-channel circuit breaker thresholds"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "messaging",
+  "number": 138,
+  "title": "Cap retries across provider hops",
+  "body": "Try primary twice then failover, cap total at 4 attempts with jittered backoff. Cut duplicate sends from 1.8% to 0.2% in load test.",
+  "author": "p_012",
+  "created_at": "2026-09-05T15:11:54.882320+00:00",
+  "merged_at": "2026-09-06T10:04:00.367836+00:00",
+  "files": [
+   "services/messaging/delivery/retry_handler.py",
+   "services/messaging/delivery/delivery_orchestrator.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: enforce retry budget across failover hops"
+   },
+   {
+    "message": "test: add retry budget tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_008",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-05T16:55:26.921438+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 139,
+  "title": "Add failover metrics and PagerDuty alert",
+  "body": "Emit provider, channel, failover_reason on every send. Dashboard now shows time-to-failover and success by backup vendor.",
+  "author": "p_012",
+  "created_at": "2026-09-14T15:57:04.189405+00:00",
+  "merged_at": "2026-09-16T05:27:37.107036+00:00",
+  "files": [
+   "services/messaging/delivery/failover_metrics.py",
+   "services/messaging/delivery/delivery_orchestrator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add failover decision metrics and alerts"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_009",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T17:02:07.578349+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "messaging",
+  "number": 140,
+  "title": "Chaos test email/SMS failover drill",
+  "body": "Verified cutover to SES in 41s and to Twilio in 28s with simulated outage. No message loss across 20k test sends.",
+  "author": "p_012",
+  "created_at": "2026-09-22T13:01:36.338952+00:00",
+  "merged_at": "2026-09-24T02:51:47.828958+00:00",
+  "files": [
+   "services/messaging/delivery/failover_drill.py",
+   "services/messaging/delivery/RUNBOOK.md"
+  ],
+  "commits": [
+   {
+    "message": "test: add chaos failover drill for email and SMS"
+   },
+   {
+    "message": "docs: update failover runbook with drill results"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_010",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-22T14:10:14.260346+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 101,
+  "title": "Add Q4 ranking roadmap tracker",
+  "body": "Added Q4 tracker to centralize ranking milestones, owners and launch dates. Replaces the scattered sheets so launch reviews pull live status.",
+  "author": "p_013",
+  "created_at": "2026-08-03T14:39:00.648143+00:00",
+  "merged_at": "2026-08-04T02:54:36.349209+00:00",
+  "files": [
+   "services/ads/ranking/roadmap_tracker.py",
+   "services/ads/ranking/roadmap_config.json"
+  ],
+  "commits": [
+   {
+    "message": "feat: add Q4 roadmap tracker with milestones"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 102,
+  "title": "Automate launch review checklist",
+  "body": "Automates pre-launch checks for ranking releases: model evals, CTR guardrails, latency budget. Cuts review prep from 2 hours to 20 min.",
+  "author": "p_013",
+  "created_at": "2026-08-15T10:47:43.476093+00:00",
+  "merged_at": "2026-08-17T10:06:07.230071+00:00",
+  "files": [
+   "services/ads/ranking/launch_review.py",
+   "services/ads/ranking/review_template.md"
+  ],
+  "commits": [
+   {
+    "message": "feat: automate launch review checklist generation"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_017",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-15T12:47:14.365547+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 103,
+  "title": "Tune ranking weights for CTR",
+  "body": "Updated prod weights after Aug 18 offline eval (+1.3% eCPM, neutral CTR). Reviewed with Hannah and Arjun in launch review.",
+  "author": "p_013",
+  "created_at": "2026-08-24T10:27:59.290596+00:00",
+  "merged_at": "2026-08-26T01:32:45.904237+00:00",
+  "files": [
+   "services/ads/serving/ranking_weights.yaml",
+   "services/ads/serving/weight_audit.log"
+  ],
+  "commits": [
+   {
+    "message": "perf: tune ranking weights for CTR lift"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 104,
+  "title": "Add ranking launch metrics",
+  "body": "Logs pCTR calibration, auction win-rate and revenue delta per ranking launch. Feeds the roadmap review deck Maya asked for.",
+  "author": "p_013",
+  "created_at": "2026-09-04T10:44:27.011232+00:00",
+  "merged_at": "2026-09-05T22:46:29.983406+00:00",
+  "files": [
+   "services/ads/ranking/launch_metrics.py",
+   "services/ads/ranking/metrics_schema.json"
+  ],
+  "commits": [
+   {
+    "message": "feat: add launch metrics exporter"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-04T11:34:02.555919+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 105,
+  "title": "Refactor ranking review approvals",
+  "body": "Simplified approver chain for ranking launches: eng, DS, policy. Fixes confusion from last week's v2.3 rollout.",
+  "author": "p_013",
+  "created_at": "2026-09-14T15:28:24.902687+00:00",
+  "merged_at": "2026-09-15T17:17:05.875422+00:00",
+  "files": [
+   "services/ads/ranking/review_approvals.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: simplify ranking review approvals flow"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_014",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T16:53:56.562372+00:00"
+   },
+   {
+    "reviewer": "p_015",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T16:57:03.188240+00:00"
+   },
+   {
+    "reviewer": "p_018",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T16:30:46.492000+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 106,
+  "title": "Fix ranking roadmap burndown",
+  "body": "Fixed burndown calc that double-counted delayed ranking items. Roadmap view now matches Asana for Sept releases.",
+  "author": "p_013",
+  "created_at": "2026-09-21T14:26:34.798751+00:00",
+  "merged_at": "2026-09-21T17:46:33.911714+00:00",
+  "files": [
+   "services/ads/serving/launch_readiness.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: correct roadmap burndown calculation"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_017",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-21T15:03:27.705657+00:00"
+   },
+   {
+    "reviewer": "p_018",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-21T15:50:52.973749+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 107,
+  "title": "Add token bucket request throttler",
+  "body": "Adds token bucket limiter with per-key refill and jitter to smooth bursts from ranking upstream. Capped at 12k QPS per host in load test.",
+  "author": "p_014",
+  "created_at": "2026-08-02T17:03:50.412228+00:00",
+  "merged_at": "2026-08-03T07:55:02.122295+00:00",
+  "files": [
+   "services/ads/serving/throttle/token_bucket.py",
+   "services/ads/serving/throttle/config.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add token bucket limiter with jittered refill"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 108,
+  "title": "Enforce per-advertiser throttling quotas",
+  "body": "Enforces per-advertiser QPS quotas loaded from Configerator. Rejects over-quota with 429 + retry-after. Prevents noisy neighbor during holiday push.",
+  "author": "p_014",
+  "created_at": "2026-08-13T15:12:50.778338+00:00",
+  "merged_at": "2026-08-15T01:04:12.411884+00:00",
+  "files": [
+   "services/ads/serving/throttle/quota_manager.py",
+   "services/ads/serving/throttle/throttle_policy.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce per-advertiser QPS quotas"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 109,
+  "title": "Fix token overdraft race",
+  "body": "Fixes race where concurrent acquires over-drafted tokens under high fanout. Switch to atomic LUA decrement in Redis path, fixes 429 miscounts.",
+  "author": "p_014",
+  "created_at": "2026-08-24T09:38:07.365801+00:00",
+  "merged_at": "2026-08-25T08:12:28.269239+00:00",
+  "files": [
+   "services/ads/serving/throttle/token_bucket.py",
+   "services/ads/serving/throttle/redis_store.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: make token acquire atomic under concurrency"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 110,
+  "title": "Add burst handling for retry storms",
+  "body": "Adds burst allowance up to 2x base QPS for 500ms to absorb ranking retries. Drops p99 throttle latency from 8ms to 3ms in canary.",
+  "author": "p_014",
+  "created_at": "2026-08-31T09:47:28.789403+00:00",
+  "merged_at": "2026-09-02T09:14:27.891841+00:00",
+  "files": [
+   "services/ads/serving/throttle/burst_handler.py",
+   "services/ads/serving/throttle/limiter.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: add short burst window and fast-path check"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_015",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-31T11:19:50.378254+00:00"
+   },
+   {
+    "reviewer": "p_018",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-31T11:14:19.797677+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 111,
+  "title": "Add throttle observability metrics",
+  "body": "Exposes throttled_qps, rejected_count, and bucket_fill_ratio to ODS. Added dashboard alerts for >5% reject rate sustained 10m.",
+  "author": "p_014",
+  "created_at": "2026-09-08T09:38:50.981818+00:00",
+  "merged_at": "2026-09-09T04:25:14.684434+00:00",
+  "files": [
+   "services/ads/serving/throttle/metrics.py",
+   "services/ads/serving/throttle/limiter.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: emit throttle metrics to ODS"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_013",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T11:16:55.765383+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 112,
+  "title": "Refactor limiter for testability",
+  "body": "Refactors limiter to injectable clock and store interfaces. No prod logic change, unblocks deterministic unit tests for edge cases.",
+  "author": "p_014",
+  "created_at": "2026-09-17T15:31:25.685098+00:00",
+  "merged_at": "2026-09-18T03:57:31.354005+00:00",
+  "files": [
+   "services/ads/serving/throttle/limiter.py",
+   "services/ads/serving/throttle/redis_store.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: decouple limiter clock and store"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 113,
+  "title": "Add throttle failover tests",
+  "body": "Covers quota exhaustion, burst expiry, and Redis failover fallback to local limiter. Raises coverage 71% to 92% for throttle package.",
+  "author": "p_014",
+  "created_at": "2026-09-23T15:42:49.862494+00:00",
+  "merged_at": "2026-09-24T03:06:54.091453+00:00",
+  "files": [
+   "services/ads/serving/throttle/test_limiter.py",
+   "services/ads/serving/throttle/test_quota.py"
+  ],
+  "commits": [
+   {
+    "message": "test: add coverage for quota and failover paths"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 114,
+  "title": "Add dwell-time aggregates to ranking features",
+  "body": "Added 7-day and 30-day advertiser dwell-time aggregates to training features. Offline AUC lift +0.31% on Sept backfill. Needed for Q4 relevance push.",
+  "author": "p_015",
+  "created_at": "2026-08-02T12:17:41.887754+00:00",
+  "merged_at": "2026-08-04T07:42:32.948508+00:00",
+  "files": [
+   "services/ads/ranking/dwell_features.py",
+   "services/ads/ranking/feature_config.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add advertiser dwell-time aggregates"
+   },
+   {
+    "message": "test: add coverage for dwell feature builder"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_018",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-02T13:11:15.656185+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 115,
+  "title": "Build offline NDCG eval harness",
+  "body": "New offline eval job computes NDCG@5, MAP and calibration error on sampled logs. Cuts eval time from 3h to 40min using Presto partitioned reads.",
+  "author": "p_015",
+  "created_at": "2026-08-10T10:33:50.456814+00:00",
+  "merged_at": "2026-08-11T10:37:11.256203+00:00",
+  "files": [
+   "services/ads/ranking/offline_eval.py",
+   "services/ads/ranking/eval_config.json"
+  ],
+  "commits": [
+   {
+    "message": "feat: add offline NDCG evaluation harness"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 116,
+  "title": "Add pairwise dataset builder",
+  "body": "Joins bid price, pCTR bucket and creative ID into pairwise training examples. Fixes skew we saw in Aug 18 logs where negatives were under-sampled.",
+  "author": "p_015",
+  "created_at": "2026-08-19T12:03:49.232366+00:00",
+  "merged_at": "2026-08-21T02:50:50.236513+00:00",
+  "files": [
+   "services/ads/ranking/pairwise_dataset.py",
+   "services/ads/ranking/sampling_utils.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add pairwise training example builder"
+   },
+   {
+    "message": "fix: correct negative sampling rate"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 117,
+  "title": "Add feature drift monitor for pCTR",
+  "body": "CTR and CVR predictions were drifting on iOS traffic. Added PSI checks and Slack alert to #ads-ranking. Threshold set at 0.15 after talk with Hannah.",
+  "author": "p_015",
+  "created_at": "2026-08-27T16:36:33.379590+00:00",
+  "merged_at": "2026-08-29T00:59:46.363264+00:00",
+  "files": [
+   "services/ads/ranking/feature_drift.py",
+   "services/ads/ranking/drift_thresholds.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add PSI drift checks for pCTR"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 118,
+  "title": "Prune deprecated geo features",
+  "body": "Removes unused location resolution features, keeps geo-hash v2. Reduces feature vector from 412 to 368 dims. No AUC drop on Sept 10 offline replay.",
+  "author": "p_015",
+  "created_at": "2026-09-05T10:00:33.418439+00:00",
+  "merged_at": "2026-09-06T23:59:42.776046+00:00",
+  "files": [
+   "services/ads/ranking/geo_features.py",
+   "services/ads/ranking/feature_registry.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: prune deprecated geo features"
+   },
+   {
+    "message": "test: update feature count assertions"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-05T11:34:21.321415+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 119,
+  "title": "Fix sparse ID fallback in serving",
+  "body": "Serving was dropping sparse IDs for new advertisers. Added hashing fallback with 2M buckets. Validated with Victor on staging shadow traffic Sept 18.",
+  "author": "p_015",
+  "created_at": "2026-09-14T11:17:10.954757+00:00",
+  "merged_at": "2026-09-15T11:16:33.177262+00:00",
+  "files": [
+   "services/ads/serving/ranking_handler.py",
+   "services/ads/serving/feature_lookup.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: handle missing sparse IDs in ranking serving"
+   },
+   {
+    "message": "test: add fallback hashing tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 120,
+  "title": "Log SHAP importance in offline eval",
+  "body": "Nightly job now logs feature importance via SHAP and pushes top-20 to Hive table ads_ranking.feature_importance. Helps debug last week's CVR dip.",
+  "author": "p_015",
+  "created_at": "2026-09-22T15:51:33.574512+00:00",
+  "merged_at": "2026-09-24T06:09:34.401889+00:00",
+  "files": [
+   "services/ads/ranking/importance_logger.py",
+   "services/ads/ranking/README.md"
+  ],
+  "commits": [
+   {
+    "message": "feat: log SHAP importance in offline eval"
+   },
+   {
+    "message": "docs: update eval runbook"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_017",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-22T16:47:37.354461+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 121,
+  "title": "Fix second-price clearing after floor filter",
+  "body": "Fixed clearing bug where second-price calc used stale top bid when floor filtered the winner. Now re-sorts eligible bids after floor check. Prevents overcharging in low-fill placements.",
+  "author": "p_016",
+  "created_at": "2026-08-02T14:37:38.504644+00:00",
+  "merged_at": "2026-08-04T05:27:54.887653+00:00",
+  "files": [
+   "services/ads/serving/second_price.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: re-sort eligible bids after reserve filter"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 122,
+  "title": "Add dynamic reserve floors by placement",
+  "body": "Added dynamic reserve floors by placement + geo from config service. Falls back to static $0.85 CPM floor on config miss. Improves yield 2.1% in shadow test on US feed.",
+  "author": "p_016",
+  "created_at": "2026-08-11T09:30:51.270077+00:00",
+  "merged_at": "2026-08-12T05:43:22.124861+00:00",
+  "files": [
+   "services/ads/serving/reserve_pricing.py",
+   "services/ads/serving/reserve_config.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add dynamic reserve lookup by placement geo"
+   },
+   {
+    "message": "test: cover config miss fallback"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 123,
+  "title": "Cut auction latency with early exit",
+  "body": "Tuned auction timeout to 28ms and added early-exit when top 2 bids locked. p99 serving latency down from 41ms to 33ms with no revenue delta in 3-day A/B.",
+  "author": "p_016",
+  "created_at": "2026-08-19T14:04:35.059645+00:00",
+  "merged_at": "2026-08-21T11:37:44.643916+00:00",
+  "files": [
+   "services/ads/serving/auction_runner.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: early-exit second-price loop at 28ms budget"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_013",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-19T14:55:42.902003+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 124,
+  "title": "Log auction clearing details to Scuba",
+  "body": "Logs final price, winner id, runner-up bid and applied floor to Scuba for every auction. Helps Hannah debug floor overrides from last week's ads ranking sync.",
+  "author": "p_016",
+  "created_at": "2026-08-28T11:29:20.798430+00:00",
+  "merged_at": "2026-08-28T21:18:33.404521+00:00",
+  "files": [
+   "services/ads/ranking/auction_logging.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: emit auction clearing logs to scuba"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_015",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-28T12:11:21.379877+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 125,
+  "title": "Enforce video interstitial reserve floor",
+  "body": "Enforces min $1.20 floor for video interstitials per Victor's Q3 policy. Skips floor for internal house ads. Verified with replay on Aug 12 traffic.",
+  "author": "p_016",
+  "created_at": "2026-09-05T16:16:16.295022+00:00",
+  "merged_at": "2026-09-06T01:13:26.851005+00:00",
+  "files": [
+   "services/ads/serving/reserve_pricing.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce video floor with house-ad exemption"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_018",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-05T17:53:32.720383+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 126,
+  "title": "Remove duplicate floor check in ranking",
+  "body": "Removes double floor application when ranking passes pre-floored bids to serving. Single source of truth is now serving reserve check. Fixes 0.4% under-delivery.",
+  "author": "p_016",
+  "created_at": "2026-09-14T10:02:55.259643+00:00",
+  "merged_at": "2026-09-16T01:08:51.987868+00:00",
+  "files": [
+   "services/ads/ranking/reserve_handoff.py",
+   "services/ads/ranking/bid_filter.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: remove duplicate floor check in ranking path"
+   },
+   {
+    "message": "test: add ranking-serving floor handoff test"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 127,
+  "title": "Add soft-floor boost experiment",
+  "body": "Adds soft-floor experiment: bids below soft floor get 0.85x ranking boost instead of hard reject. Config via Gatekeeper ads_ranking_soft_floor. Ready for Arjun's review.",
+  "author": "p_016",
+  "created_at": "2026-09-22T16:07:05.179908+00:00",
+  "merged_at": "2026-09-24T08:08:15.315152+00:00",
+  "files": [
+   "services/ads/serving/soft_floor.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add soft-floor ranking boost experiment"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 128,
+  "title": "Add text policy scorer to review pipeline",
+  "body": "Added text model v3 to score new ad copy for policy violations before ranking. Uses approved creative embeddings and logs scores for audit.",
+  "author": "p_017",
+  "created_at": "2026-08-02T09:26:42.188829+00:00",
+  "merged_at": "2026-08-03T17:40:45.818106+00:00",
+  "files": [
+   "services/ads/ranking/creative_text_scorer.py",
+   "services/ads/ranking/review_features.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add creative text classifier for policy check"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 129,
+  "title": "Fix duplicate image checks",
+  "body": "Image NSFW and logo checks were firing twice on retries. Dedupe by creative_id and keep last verdict. Cut duplicate review tasks by ~18%.",
+  "author": "p_017",
+  "created_at": "2026-08-12T14:29:03.263650+00:00",
+  "merged_at": "2026-08-13T17:43:21.366934+00:00",
+  "files": [
+   "services/ads/ranking/image_policy_check.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: dedupe image policy checks on retry"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_015",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-12T15:54:57.477706+00:00"
+   },
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-12T15:24:45.198777+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 130,
+  "title": "Cache review verdicts for ranking",
+  "body": "Cache creative review verdicts in ranking path for 15m to avoid re-fetching on every bid request. P99 lookup 42ms to 9ms in load test.",
+  "author": "p_017",
+  "created_at": "2026-08-24T16:14:22.665062+00:00",
+  "merged_at": "2026-08-24T18:53:41.295621+00:00",
+  "files": [
+   "services/ads/ranking/verdict_cache.py",
+   "services/ads/ranking/ranking_hook.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: cache review verdicts in ranking path"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-24T17:53:25.381764+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 131,
+  "title": "Fast-track low-risk creatives",
+  "body": "New advertisers were stuck 6+ hours in manual review. Added fast-track for low-risk categories with auto-approve threshold 0.92 and human spot-check.",
+  "author": "p_017",
+  "created_at": "2026-08-31T09:31:13.362896+00:00",
+  "merged_at": "2026-09-01T17:24:19.488194+00:00",
+  "files": [
+   "services/ads/ranking/fast_track.py",
+   "services/ads/ranking/review_queue.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add fast-track lane for low-risk creatives"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 132,
+  "title": "Log decision provenance",
+  "body": "Reviewer labels and model scores disagreed with no trace. Now store model version, thresholds, and policy rule ids with each decision.",
+  "author": "p_017",
+  "created_at": "2026-09-08T13:04:29.465844+00:00",
+  "merged_at": "2026-09-10T10:01:17.733562+00:00",
+  "files": [
+   "services/ads/ranking/decision_logger.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: log review decision provenance"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_014",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T14:43:31.104415+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 133,
+  "title": "Fix video creative timeouts",
+  "body": "Video ads >30s were timing out at 2s. Raised timeout to 5s for video, added async callback, and fallback to pending instead of reject.",
+  "author": "p_017",
+  "created_at": "2026-09-17T13:49:01.288221+00:00",
+  "merged_at": "2026-09-19T07:55:01.917096+00:00",
+  "files": [
+   "services/ads/serving/review_fetcher.py",
+   "services/ads/serving/creative_timeout.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: handle video creative timeouts"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 134,
+  "title": "Refactor review queue ordering",
+  "body": "Rewrote queue poller to prioritize expiring creatives and batch DB writes. Reduced review lag from 22min to 11min p95 yesterday.",
+  "author": "p_017",
+  "created_at": "2026-09-23T10:40:41.728748+00:00",
+  "merged_at": "2026-09-23T22:23:10.339810+00:00",
+  "files": [
+   "services/ads/ranking/review_queue.py"
+  ],
+  "commits": [
+   {
+    "message": "refactor: prioritize expiring creatives in queue"
+   },
+   {
+    "message": "test: add queue ordering tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 135,
+  "title": "Emit billed impression events from serving",
+  "body": "Add billed_impression event emission in serving path with campaign_id and bid price. Fixes missing rows in advertiser daily spend report.",
+  "author": "p_018",
+  "created_at": "2026-08-03T15:16:22.157433+00:00",
+  "merged_at": "2026-08-04T06:44:57.435115+00:00",
+  "files": [
+   "services/ads/serving/billing_events.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: emit billed_impression event on served ads"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 136,
+  "title": "Fix double-counted click billing",
+  "body": "Dedupes click billing using event_id keyed on request_id + creative_id. Prevents double charge on retries from mobile clients.",
+  "author": "p_018",
+  "created_at": "2026-08-12T15:21:47.465494+00:00",
+  "merged_at": "2026-08-13T20:20:21.460542+00:00",
+  "files": [
+   "services/ads/serving/click_billing.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: dedupe click billing events on retry"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 137,
+  "title": "Add ranking reporting metrics",
+  "body": "Adds p5/p99 e2e latency and fill-rate gauges by placement. Feeds the advertiser reporting dashboard SLA panel.",
+  "author": "p_018",
+  "created_at": "2026-08-21T15:12:45.293896+00:00",
+  "merged_at": "2026-08-22T12:29:13.772632+00:00",
+  "files": [
+   "services/ads/ranking/reporting_metrics.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add serving latency and fill-rate metrics"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_013",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-21T16:58:54.415492+00:00"
+   },
+   {
+    "reviewer": "p_014",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-21T16:25:51.948782+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 138,
+  "title": "Backfill missing billing status rows",
+  "body": "Backfills Feb nulls in billing_status where serving logged impression but ranker timeout dropped billing write. Reconciles with warehouse.",
+  "author": "p_018",
+  "created_at": "2026-08-29T16:14:20.078117+00:00",
+  "merged_at": "2026-08-31T12:05:58.902643+00:00",
+  "files": [
+   "services/ads/serving/billing_reconcile.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: backfill missing billing_status for timed-out ranks"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_017",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-29T17:29:55.818095+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 139,
+  "title": "Add billing event validation",
+  "body": "Validates currency_code and bid_cents before billing write. Drops malformed events to DLQ instead of failing the serve request.",
+  "author": "p_018",
+  "created_at": "2026-09-07T14:27:26.020110+00:00",
+  "merged_at": "2026-09-08T13:31:57.479470+00:00",
+  "files": [
+   "services/ads/serving/billing_validator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: validate billing event schema in serving"
+   },
+   {
+    "message": "test: add billing validation unit tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_014",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T15:58:57.981549+00:00"
+   },
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-07T15:41:29.937384+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "ads",
+  "number": 140,
+  "title": "Cache budget caps for billing checks",
+  "body": "Caches advertiser budget caps for 30s to cut reporting DB QPS during peak. Falls back to last known cap on fetch error.",
+  "author": "p_018",
+  "created_at": "2026-09-15T12:37:14.555365+00:00",
+  "merged_at": "2026-09-17T08:13:06.101229+00:00",
+  "files": [
+   "services/ads/ranking/budget_cache.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: cache advertiser budget lookup for billing"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "ads",
+  "number": 141,
+  "title": "Fix video billing view threshold",
+  "body": "Corrects video_view billing threshold from 2s to 3s per updated ads policy 4.2. Updates reporting metric definition docstring.",
+  "author": "p_018",
+  "created_at": "2026-09-22T13:55:20.905804+00:00",
+  "merged_at": "2026-09-24T10:08:15.517371+00:00",
+  "files": [
+   "services/ads/serving/video_billing.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: update video view billing threshold to 3s"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_016",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-22T15:07:16.752889+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 109,
+  "title": "Speed up developer survey CI deploys",
+  "body": "Added scheduled run for Q3 developer survey pipeline and cached survey template assets. Cuts survey deploy time from 14m to 6m for roadmap review.",
+  "author": "p_019",
+  "created_at": "2026-09-19T13:16:27.510496+00:00",
+  "merged_at": "2026-09-20T15:44:17.724275+00:00",
+  "files": [
+   "platform/ci/survey-pipeline.yml",
+   "platform/ci/cache-config.yml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add scheduled survey pipeline run"
+   },
+   {
+    "message": "perf: cache survey template assets in CI"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_021",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-19T13:52:18.388190+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 110,
+  "title": "Gate survey admin behind SSO",
+  "body": "Adds SSO check for survey admin pages so only Developer Platform members can publish surveys or edit roadmap drafts. Needed before Aug 29 survey launch.",
+  "author": "p_019",
+  "created_at": "2026-09-11T13:05:58.010335+00:00",
+  "merged_at": "2026-09-11T15:57:35.536460+00:00",
+  "files": [
+   "shared/auth/survey-scopes.ts",
+   "shared/auth/admin-guard.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce SSO for survey admin"
+   },
+   {
+    "message": "test: cover admin scope checks"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 111,
+  "title": "Split roadmap portal CI jobs",
+  "body": "Splits CI jobs for roadmap portal preview vs prod. Preview builds now run lint+unit only, unblocking the team during roadmap planning week.",
+  "author": "p_019",
+  "created_at": "2026-09-03T13:45:59.402523+00:00",
+  "merged_at": "2026-09-04T00:11:22.068655+00:00",
+  "files": [
+   "platform/ci/roadmap-preview.yml",
+   "platform/ci/steps.sh"
+  ],
+  "commits": [
+   {
+    "message": "refactor: split preview and prod CI jobs"
+   },
+   {
+    "message": "fix: correct preview artifact path"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 112,
+  "title": "Anonymous tokens for dev survey",
+  "body": "Adds anonymous token flow for Q3 developer survey so responses stay de-identified but we can still prevent duplicates. Survey target n=400.",
+  "author": "p_019",
+  "created_at": "2026-08-23T17:15:21.744523+00:00",
+  "merged_at": "2026-08-25T08:01:04.371125+00:00",
+  "files": [
+   "shared/auth/survey-tokens.ts",
+   "shared/auth/token-store.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: add anonymous survey tokens"
+   },
+   {
+    "message": "test: add token uniqueness tests"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 113,
+  "title": "Publish Q2 survey to roadmap",
+  "body": "Publishes Q2 survey results (NPS 42, n=312) to roadmap inputs and archives raw CSVs. Feeds directly into H2 platform roadmap priorities.",
+  "author": "p_019",
+  "created_at": "2026-08-13T15:54:31.414688+00:00",
+  "merged_at": "2026-08-14T15:41:21.844304+00:00",
+  "files": [
+   "platform/ci/survey-results.yml",
+   "platform/ci/archive.sh"
+  ],
+  "commits": [
+   {
+    "message": "docs: publish Q2 survey findings"
+   },
+   {
+    "message": "chore: archive Q2 survey data"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-13T16:53:43.971658+00:00"
+   },
+   {
+    "reviewer": "p_023",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-13T16:41:36.599543+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 114,
+  "title": "Rotate survey service credentials",
+  "body": "Rotates service account used by survey scheduler and shortens session TTL to 8h per sec review. No impact to active survey links.",
+  "author": "p_019",
+  "created_at": "2026-08-04T11:29:09.433811+00:00",
+  "merged_at": "2026-08-05T15:05:01.797295+00:00",
+  "files": [
+   "shared/auth/session-config.ts",
+   "shared/auth/rotation.sh"
+  ],
+  "commits": [
+   {
+    "message": "fix: rotate survey scheduler creds"
+   },
+   {
+    "message": "chore: shorten survey session TTL"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 115,
+  "title": "Add token bucket limiter core",
+  "body": "Adds core token bucket limiter with per-key refill. Defaults to 1000 rps per service, refill every 1s. Unblocks Redis integration next.",
+  "author": "p_020",
+  "created_at": "2026-08-02T14:40:46.714050+00:00",
+  "merged_at": "2026-08-03T16:31:25.260874+00:00",
+  "files": [
+   "platform/gateway/ratelimit/token_bucket.py",
+   "platform/gateway/ratelimit/limiter.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add token bucket rate limiter core"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 116,
+  "title": "Wire Redis store for distributed limits",
+  "body": "Swaps in-memory store for Redis with Lua atomic decrement. Tested fail-open on Redis timeout >50ms to avoid gateway 5xx during cache outage.",
+  "author": "p_020",
+  "created_at": "2026-08-10T12:50:38.274003+00:00",
+  "merged_at": "2026-08-12T02:55:13.795924+00:00",
+  "files": [
+   "platform/gateway/ratelimit/redis_store.py",
+   "platform/gateway/ratelimit/failover.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add redis-backed counter store"
+   },
+   {
+    "message": "test: add redis store failover tests"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_023",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-10T13:54:14.360142+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 117,
+  "title": "Add per-route quota config",
+  "body": "Supports per-route quotas via YAML, e.g. /v1/search 200 rps, /v1/ingest 2000 rps. Falls back to default quota when route not matched.",
+  "author": "p_020",
+  "created_at": "2026-08-19T16:26:19.048787+00:00",
+  "merged_at": "2026-08-20T20:12:44.088509+00:00",
+  "files": [
+   "platform/gateway/ratelimit/quotas.py",
+   "platform/gateway/ratelimit/config.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: support per-route quota config"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_023",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-19T18:22:22.341217+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 118,
+  "title": "Handle burst traffic with 429 headers",
+  "body": "Allows short bursts up to 1.5x quota for 2s to absorb deploy spikes. Returns 429 with Retry-After header when burst exhausted.",
+  "author": "p_020",
+  "created_at": "2026-08-28T15:17:58.363554+00:00",
+  "merged_at": "2026-08-29T06:02:15.830423+00:00",
+  "files": [
+   "platform/gateway/ratelimit/burst_handler.py",
+   "platform/gateway/ratelimit/middleware.go"
+  ],
+  "commits": [
+   {
+    "message": "feat: add burst allowance handling"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_019",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-28T17:08:45.974310+00:00"
+   },
+   {
+    "reviewer": "p_021",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-28T17:06:16.211965+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 119,
+  "title": "Add limiter Prometheus metrics",
+  "body": "Emits ratelimit_hits_total, allowed_total, and latency histogram to Prometheus. Wired to existing gateway Grafana dashboard.",
+  "author": "p_020",
+  "created_at": "2026-09-06T11:06:33.880356+00:00",
+  "merged_at": "2026-09-07T12:27:51.317397+00:00",
+  "files": [
+   "platform/gateway/ratelimit/metrics.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add prometheus metrics for limiter"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 120,
+  "title": "Fix refill race and cut p99 latency",
+  "body": "Fixes race where concurrent refill double-counted tokens under >5k rps load test. Cuts p99 limiter overhead from 4.2ms to 1.1ms with pipelining.",
+  "author": "p_020",
+  "created_at": "2026-09-14T12:47:37.193664+00:00",
+  "merged_at": "2026-09-16T01:45:12.058077+00:00",
+  "files": [
+   "platform/gateway/ratelimit/token_bucket.py",
+   "platform/gateway/ratelimit/redis_store.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: resolve token refill race condition"
+   },
+   {
+    "message": "perf: pipeline redis token checks"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_022",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-14T13:42:23.032028+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 121,
+  "title": "Update quotas and tuning docs",
+  "body": "Tuned prod defaults after Aug load test: 1500 rps default, search 300 rps. Documents quota tuning and 429 troubleshooting for service owners.",
+  "author": "p_020",
+  "created_at": "2026-09-22T09:59:15.344554+00:00",
+  "merged_at": "2026-09-23T08:22:37.278530+00:00",
+  "files": [
+   "platform/gateway/ratelimit/README.md",
+   "platform/gateway/ratelimit/config.yaml"
+  ],
+  "commits": [
+   {
+    "message": "docs: add rate limit tuning guide"
+   },
+   {
+    "message": "chore: bump default quotas for prod"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 122,
+  "title": "Hash-based cache keys for deps",
+  "body": "Added content-hash key for node_modules and pip wheels in CI cache. Avoids stale restores on lockfile bumps. Early test on api-service cut restore time by ~40%.",
+  "author": "p_021",
+  "created_at": "2026-08-03T12:23:14.196931+00:00",
+  "merged_at": "2026-08-04T13:38:33.795400+00:00",
+  "files": [
+   "platform/ci/cache_keys.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add content-hash cache keys for deps"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_019",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T12:53:33.585478+00:00"
+   },
+   {
+    "reviewer": "p_022",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T12:57:34.844653+00:00"
+   },
+   {
+    "reviewer": "p_023",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T14:12:49.236331+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 123,
+  "title": "Timing-based jest sharding",
+  "body": "Split jest suites by timing data from last 20 runs. Balances shards to ~4 min each vs previous 11 min p90 on longest shard. Uses artifact from main branch.",
+  "author": "p_021",
+  "created_at": "2026-08-14T13:11:24.749594+00:00",
+  "merged_at": "2026-08-15T23:03:21.003616+00:00",
+  "files": [
+   "platform/ci/test_sharder.py",
+   "platform/ci/shard_balancer.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add timing-aware test sharding"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 124,
+  "title": "Fix cache eviction thrash",
+  "body": "Fixed cache eviction deleting hot layers when disk hit 85%. Now keeps last 3 main-branch layers and evicts oldest feature-branch first. Stops thrash we saw Aug 28.",
+  "author": "p_021",
+  "created_at": "2026-08-22T13:40:07.441183+00:00",
+  "merged_at": "2026-08-23T16:11:59.509646+00:00",
+  "files": [
+   "platform/ci/cache_evictor.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: prioritize main-branch layers in eviction"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 125,
+  "title": "Remote build cache for main",
+  "body": "Push built wheels and compiled TS output to shared S3 cache on main merges. PR builds now hit 72% vs 41% before. Added checksum verify on pull.",
+  "author": "p_021",
+  "created_at": "2026-08-31T13:27:47.554041+00:00",
+  "merged_at": "2026-09-02T10:46:20.140761+00:00",
+  "files": [
+   "platform/ci/remote_cache.py",
+   "platform/ci/cache_verify.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: push main build outputs to remote cache"
+   },
+   {
+    "message": "test: add checksum verify for remote pull"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-31T14:08:40.464555+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 126,
+  "title": "Shard pytest integration suite",
+  "body": "Shard python integration tests across 8 runners by file duration. Cut platform-ci e2e from 28 to 12 mins in staging. Retries flaky shard once.",
+  "author": "p_021",
+  "created_at": "2026-09-08T11:41:37.524993+00:00",
+  "merged_at": "2026-09-10T06:00:51.800776+00:00",
+  "files": [
+   "platform/ci/pytest_sharder.py"
+  ],
+  "commits": [
+   {
+    "message": "perf: shard python integration tests x8"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_019",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-08T12:13:51.630770+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 127,
+  "title": "Warm base images nightly",
+  "body": "Dropped cold docker layer pulls by warming base images nightly at 2am UTC. Added ECR pull-through. Median queue wait down 2.3 min.",
+  "author": "p_021",
+  "created_at": "2026-09-17T09:45:00.199057+00:00",
+  "merged_at": "2026-09-17T23:41:28.682963+00:00",
+  "files": [
+   "platform/ci/image_warmer.py"
+  ],
+  "commits": [
+   {
+    "message": "chore: add nightly base image warmer"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T10:50:50.800674+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 128,
+  "title": "CI cache hit Grafana alerts",
+  "body": "Grafana panels for cache hit rate, restore time, and shard skew. Alerts if hit rate <60% for 30m. Links run URL to shard logs.",
+  "author": "p_021",
+  "created_at": "2026-09-23T12:48:41.002373+00:00",
+  "merged_at": "2026-09-25T10:12:06.023206+00:00",
+  "files": [
+   "platform/ci/metrics_dashboard.py",
+   "platform/ci/alert_rules.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add CI cache and sharding dashboard"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-23T13:52:31.975558+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 129,
+  "title": "Single-use refresh token rotation",
+  "body": "Add single-use refresh token rotation with 10s grace window for in-flight retries. Prevents replay after Okta incident on Aug 28.",
+  "author": "p_022",
+  "created_at": "2026-08-03T10:34:03.006238+00:00",
+  "merged_at": "2026-08-03T18:52:32.468823+00:00",
+  "files": [
+   "shared/auth/token_rotator.py",
+   "shared/auth/oauth_tokens.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: rotate refresh tokens on use with grace window"
+   },
+   {
+    "message": "test: cover concurrent refresh replay case"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T11:34:29.678440+00:00"
+   },
+   {
+    "reviewer": "p_023",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-03T11:50:02.206372+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 130,
+  "title": "Service identity issuer",
+  "body": "New issuer for non-human identities with short-lived 15m certs. Supports staging and prod env scoping for platform jobs.",
+  "author": "p_022",
+  "created_at": "2026-08-14T16:18:52.287714+00:00",
+  "merged_at": "2026-08-15T14:39:07.043132+00:00",
+  "files": [
+   "shared/auth/service_identity.py",
+   "shared/auth/identity_store.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add service identity issuer with env scoping"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_019",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-14T17:33:07.446705+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 131,
+  "title": "Fix concurrent refresh race",
+  "body": "Fix race where parallel refreshes issued two valid access tokens. Added Redis lock with 5s TTL, verified with load test.",
+  "author": "p_022",
+  "created_at": "2026-08-22T16:42:25.672330+00:00",
+  "merged_at": "2026-08-23T05:46:35.450730+00:00",
+  "files": [
+   "shared/auth/token_rotator.py",
+   "shared/auth/token_store.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: serialize concurrent token refresh with lock"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 132,
+  "title": "Harden service identity validation",
+  "body": "Validate spiffe IDs against allowlist and check expiry skew of 30s. Blocks expired CI runner identities seen last week.",
+  "author": "p_022",
+  "created_at": "2026-08-30T16:42:09.121911+00:00",
+  "merged_at": "2026-09-01T01:29:53.709174+00:00",
+  "files": [
+   "shared/auth/identity_validator.py",
+   "shared/auth/service_identity.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: enforce service identity validation checks"
+   },
+   {
+    "message": "test: add validator coverage for expired spiffe"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 133,
+  "title": "Background rotation sweeper",
+  "body": "Automated rotation for tokens older than 7 days, runs hourly. Deletes expired rows to keep postgres table under 2M rows.",
+  "author": "p_022",
+  "created_at": "2026-09-08T11:00:57.642705+00:00",
+  "merged_at": "2026-09-10T06:16:45.219990+00:00",
+  "files": [
+   "shared/auth/rotation_job.py",
+   "shared/auth/rotation_config.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: add scheduled rotation sweeper"
+   },
+   {
+    "message": "chore: tune sweeper batch size to 500"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 134,
+  "title": "Add rotation metrics",
+  "body": "Emit rotation_success, rotation_conflict, and identity_issue latency to Datadog. Alert if p99 > 400ms or failures >1%.",
+  "author": "p_022",
+  "created_at": "2026-09-17T16:03:06.937235+00:00",
+  "merged_at": "2026-09-19T02:59:36.389825+00:00",
+  "files": [
+   "shared/auth/token_metrics.py",
+   "shared/auth/token_rotator.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add token rotation datadog metrics"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 135,
+  "title": "Bulk revoke by service identity",
+  "body": "Revoke all tokens for a service identity on decommission. Called by offboarding hook, tested with 10k token bulk revoke in 3.2s.",
+  "author": "p_022",
+  "created_at": "2026-09-24T12:00:19.612362+00:00",
+  "merged_at": "2026-09-24T20:34:56.934418+00:00",
+  "files": [
+   "shared/auth/token_store.py",
+   "shared/auth/service_identity.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: bulk revoke tokens by service identity"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 136,
+  "title": "Add flake-score for test history",
+  "body": "Added flake-score calculation from last 50 runs in Jenkins + GHA. Scores over 0.3 auto-flag flaky. Cuts manual triage for platform/ci by ~40%.",
+  "author": "p_023",
+  "created_at": "2026-09-20T10:13:29.414391+00:00",
+  "merged_at": "2026-09-22T08:43:54.830401+00:00",
+  "files": [
+   "platform/ci/flake_scorer.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add flake-score calculator for test history"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 137,
+  "title": "Auto-quarantine repeat flakes",
+  "body": "Quarantines tests flagged 3x in 7 days to separate job instead of blocking merge. Uses quarantine.yaml allowlist with expiry. Unblocks main for payments team.",
+  "author": "p_023",
+  "created_at": "2026-09-12T15:31:50.870473+00:00",
+  "merged_at": "2026-09-14T13:20:45.554222+00:00",
+  "files": [
+   "platform/ci/quarantine.py",
+   "platform/ci/quarantine.yaml"
+  ],
+  "commits": [
+   {
+    "message": "feat: auto-quarantine repeat flaky tests"
+   },
+   {
+    "message": "test: cover quarantine expiry logic"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_019",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-12T16:45:36.030018+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 138,
+  "title": "Fix retry-before-quarantine flow",
+  "body": "Retry failed tests once with isolated worker and capture seed/logs. Only marks flaky if retry passes. Reduces false quarantines seen last week.",
+  "author": "p_023",
+  "created_at": "2026-09-04T14:06:05.202008+00:00",
+  "merged_at": "2026-09-05T14:30:55.586346+00:00",
+  "files": [
+   "platform/ci/retry_runner.sh"
+  ],
+  "commits": [
+   {
+    "message": "fix: retry once before flagging flaky"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_021",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-04T14:58:52.547976+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 139,
+  "title": "Weekly flaky test Slack digest",
+  "body": "Posts top 10 flaky tests + owner + quarantine status to #dev-platform every Mon 9am PT. Pulls from BigQuery ci_results table. Requested by Daniel.",
+  "author": "p_023",
+  "created_at": "2026-08-26T09:22:06.702103+00:00",
+  "merged_at": "2026-08-28T01:39:39.539369+00:00",
+  "files": [
+   "platform/ci/flaky_report.py"
+  ],
+  "commits": [
+   {
+    "message": "feat: add weekly flaky report slack bot"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_020",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-26T10:21:55.853654+00:00"
+   },
+   {
+    "reviewer": "p_021",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-26T10:27:13.571866+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 140,
+  "title": "Exclude infra failures from scoring",
+  "body": "Was quarantining infra timeouts as test flakes. Now filters k8s evictions and runner OOMs via exit codes 137/143 before scoring.",
+  "author": "p_023",
+  "created_at": "2026-08-17T15:59:44.777475+00:00",
+  "merged_at": "2026-08-18T13:50:44.790535+00:00",
+  "files": [
+   "platform/ci/failure_classifier.py"
+  ],
+  "commits": [
+   {
+    "message": "fix: exclude infra failures from flake score"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_022",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-17T16:38:54.010708+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "platform",
+  "number": 141,
+  "title": "Speed up flake detection pipeline",
+  "body": "Refactored detection pipeline to run async on test upload, p95 down from 4m to 38s. No logic change, just move to Cloud Run job.",
+  "author": "p_023",
+  "created_at": "2026-08-08T13:09:45.574335+00:00",
+  "merged_at": "2026-08-09T06:45:43.207838+00:00",
+  "files": [
+   "platform/ci/detect_worker.py",
+   "platform/ci/requirements.txt"
+  ],
+  "commits": [
+   {
+    "message": "perf: run flake detection async"
+   },
+   {
+    "message": "refactor: split ingest and scoring"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "platform",
+  "number": 142,
+  "title": "Add quarantine runbook docs",
+  "body": "Documents quarantine policy, appeal process, and dashboard link. Adds runbook for oncall to clear stale quarantines after 14 days.",
+  "author": "p_023",
+  "created_at": "2026-08-01T15:43:17.553615+00:00",
+  "merged_at": "2026-08-02T08:22:25.387732+00:00",
+  "files": [
+   "platform/ci/README.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: add flaky quarantine runbook"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 101,
+  "title": "Scaffold growth funnel dashboard",
+  "body": "Scaffolded funnel dashboard shell with signup -> activated steps. Wires to Segment `signed_up` and `workspace_activated` events. Behind ?growth_funnels flag for Laura review.",
+  "author": "p_036",
+  "created_at": "2026-08-02T11:30:37.055948+00:00",
+  "merged_at": "2026-08-02T14:24:23.428833+00:00",
+  "files": [
+   "web/growth/funnels/FunnelBoard.tsx",
+   "web/growth/funnels/funnelQueries.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: add funnel dashboard shell with signup to activation steps"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 102,
+  "title": "Instrument funnel events",
+  "body": "Adds Amplitude instrumentation for funnel_entry, step_viewed, step_completed with user_id, cohort_id, variant. Fixes missing props on invite_sent. Verified in staging.",
+  "author": "p_036",
+  "created_at": "2026-08-10T12:51:18.352863+00:00",
+  "merged_at": "2026-08-11T11:06:58.214522+00:00",
+  "files": [
+   "web/growth/funnels/events.ts",
+   "web/growth/funnels/instrumentation.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: instrument funnel entry and step completion events"
+   },
+   {
+    "message": "fix: include cohort props on invite_sent event"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 103,
+  "title": "Add cohort activation chart",
+  "body": "Adds weekly signup cohorts with D7/D14/D28 activation %. Uses activation = created project + invited teammate. Handles small-n cohorts by hiding <50 users.",
+  "author": "p_036",
+  "created_at": "2026-08-19T17:08:34.238952+00:00",
+  "merged_at": "2026-08-20T10:23:30.289394+00:00",
+  "files": [
+   "web/growth/funnels/CohortChart.tsx",
+   "web/growth/funnels/cohortUtils.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: add cohort retention table for activation"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 104,
+  "title": "Conversion breakdowns by segment",
+  "body": "Breaks out conversion by channel, device, and plan. Adds date range picker defaulting to last 28d. Fixes off-by-one in signup-to-activation rate calc found with Jessica.",
+  "author": "p_036",
+  "created_at": "2026-08-27T12:17:45.900272+00:00",
+  "merged_at": "2026-08-28T13:51:36.534579+00:00",
+  "files": [
+   "web/growth/funnels/ConversionBreakdown.tsx",
+   "web/growth/funnels/conversion.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat: add conversion breakdowns and date filter"
+   },
+   {
+    "message": "fix: correct signup-to-activation rate denominator"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 105,
+  "title": "Speed up funnel dashboard load",
+  "body": "Funnel queries were scanning 90d of events on load (~4.2s p95). Added pre-aggregated daily rollups and memoized cohort calc. Now ~650ms p95 in prod replica.",
+  "author": "p_036",
+  "created_at": "2026-09-05T16:46:23.425173+00:00",
+  "merged_at": "2026-09-07T16:05:13.210402+00:00",
+  "files": [
+   "web/growth/funnels/funnelQueries.ts",
+   "web/growth/funnels/cohortUtils.ts"
+  ],
+  "commits": [
+   {
+    "message": "perf: use daily rollups for funnel queries"
+   },
+   {
+    "message": "refactor: memoize cohort activation calc"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 106,
+  "title": "Funnel tooltip polish",
+  "body": "Adds tooltip explaining activation definition and data freshness (hourly ETL from Postgres). Uses existing Growth tooltip pattern per Laura feedback.",
+  "author": "p_036",
+  "created_at": "2026-09-14T10:58:50.143984+00:00",
+  "merged_at": "2026-09-16T09:40:42.994736+00:00",
+  "files": [
+   "web/design-system/FunnelTooltip.tsx",
+   "web/design-system/Badge.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add activation explainer and freshness badge"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 107,
+  "title": "Fix empty cohort edge cases",
+  "body": "Cohort chart crashed on empty weeks and dropoff bar showed NaN when step had 0 users. Adds empty states and unit tests for edge cohorts.",
+  "author": "p_036",
+  "created_at": "2026-09-22T16:26:57.347685+00:00",
+  "merged_at": "2026-09-23T06:39:54.791185+00:00",
+  "files": [
+   "web/growth/funnels/CohortChart.tsx",
+   "web/growth/funnels/FunnelBoard.tsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: handle empty cohorts in funnel charts"
+   },
+   {
+    "message": "test: add coverage for zero-user funnel steps"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 108,
+  "title": "Fix modal focus trap and return focus",
+  "body": "Fixed focus trap in Modal so Tab cycles inside dialog and focus returns to trigger on close. Resolves axe-core violation from Oct audit.",
+  "author": "p_039",
+  "created_at": "2026-09-21T16:58:14.860130+00:00",
+  "merged_at": "2026-09-23T06:48:16.834549+00:00",
+  "files": [
+   "web/design-system/modal.tsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: trap focus in modal and restore trigger focus"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 109,
+  "title": "Add ARIA and keyboard support to accordion",
+  "body": "Added aria-expanded, aria-controls, and keyboard handling to Accordion. Verified with VoiceOver + Chrome on Mac and NVDA on Windows.",
+  "author": "p_039",
+  "created_at": "2026-09-13T15:07:26.152391+00:00",
+  "merged_at": "2026-09-13T23:05:00.553012+00:00",
+  "files": [
+   "web/design-system/accordion.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add aria attributes to accordion"
+   },
+   {
+    "message": "test: add keyboard nav tests for accordion"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_040",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-13T16:08:21.931795+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 110,
+  "title": "Fix button color contrast for AA",
+  "body": "Raised text contrast in Button secondary variant from 3.2:1 to 4.6:1 to meet WCAG 2.2 AA. Updated tokens, no visual API change.",
+  "author": "p_039",
+  "created_at": "2026-09-05T13:54:34.079579+00:00",
+  "merged_at": "2026-09-07T09:50:04.207539+00:00",
+  "files": [
+   "web/design-system/button.tsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: bump button secondary contrast to 4.6:1"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 111,
+  "title": "Fix tabs keyboard navigation",
+  "body": "Reworked Tabs to support arrow-key nav, Home/End, and proper tablist roles. Fixes 6 issues flagged in core components audit.",
+  "author": "p_039",
+  "created_at": "2026-08-25T10:44:08.405382+00:00",
+  "merged_at": "2026-08-26T00:37:54.058232+00:00",
+  "files": [
+   "web/design-system/tabs.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add roving tabindex to tabs"
+   },
+   {
+    "message": "fix: set correct tablist aria roles"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 112,
+  "title": "Add screen reader announcements to toast",
+  "body": "Added role=status live region to Toast and ensured 8s minimum display. Screen readers now announce without stealing focus.",
+  "author": "p_039",
+  "created_at": "2026-08-16T16:05:33.203115+00:00",
+  "merged_at": "2026-08-18T12:22:28.004925+00:00",
+  "files": [
+   "web/design-system/toast.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add live region to toast notifications"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_040",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-16T17:18:02.997187+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 113,
+  "title": "Fix tooltip keyboard and SR support",
+  "body": "Updated Tooltip to open on focus and Escape to dismiss, linked via aria-describedby. Tested with Tomas on keyboard-only flow.",
+  "author": "p_039",
+  "created_at": "2026-08-07T12:43:21.866149+00:00",
+  "merged_at": "2026-08-08T22:56:30.995297+00:00",
+  "files": [
+   "web/design-system/tooltip.tsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: make tooltip operable via keyboard focus"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_040",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-07T13:40:09.834223+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 114,
+  "title": "Add skip link for keyboard users",
+  "body": "Added SkipLink component and landmark audit fixes for Header. Allows keyboard users to bypass nav, verified in design-system preview.",
+  "author": "p_039",
+  "created_at": "2026-07-31T16:34:18.488414+00:00",
+  "merged_at": "2026-07-31T21:13:04.878874+00:00",
+  "files": [
+   "web/design-system/skip-link.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add skip link component"
+   },
+   {
+    "message": "docs: document skip link usage pattern"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 115,
+  "title": "Add outline icon batch v3",
+  "body": "Added 32 new 24px outline icons for nav, sharing and media controls. Syncs with Figma library v3.4 from Aug design review.",
+  "author": "p_040",
+  "created_at": "2026-08-02T11:46:54.679545+00:00",
+  "merged_at": "2026-08-03T09:20:47.181501+00:00",
+  "files": [
+   "web/design-system/iconRegistry.js",
+   "web/design-system/Icon.jsx"
+  ],
+  "commits": [
+   {
+    "message": "feat: add 32 outline icons to registry"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_039",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-02T13:24:39.086795+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 116,
+  "title": "Add empty-state illustrations",
+  "body": "New empty-state illustrations for search, inbox zero, and offline mode. Optimized SVGs, avg 18KB down from 42KB. Requested by onboarding squad.",
+  "author": "p_040",
+  "created_at": "2026-08-13T16:42:29.474072+00:00",
+  "merged_at": "2026-08-15T13:52:20.185889+00:00",
+  "files": [
+   "web/design-system/illustrations.jsx",
+   "web/design-system/illustrationCatalog.json"
+  ],
+  "commits": [
+   {
+    "message": "feat: add empty-state illustration set"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 117,
+  "title": "Fix small icon alignment",
+  "body": "16px icons were rendering 1px off in Safari/Firefox at 125% zoom. Fixed viewBox scaling and stroke-width to 1.5px consistent.",
+  "author": "p_040",
+  "created_at": "2026-08-21T12:12:43.142219+00:00",
+  "merged_at": "2026-08-23T03:05:12.836983+00:00",
+  "files": [
+   "web/design-system/Icon.jsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: correct 16px icon viewBox scaling"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 118,
+  "title": "Lazy-load illustration sets",
+  "body": "Split illustration bundle by category so landing only loads hero set. Cuts initial JS by ~110KB, LCP improved 240ms in staging test.",
+  "author": "p_040",
+  "created_at": "2026-08-29T16:37:03.215244+00:00",
+  "merged_at": "2026-08-31T10:00:14.677427+00:00",
+  "files": [
+   "web/design-system/illustrations.jsx",
+   "web/design-system/iconLoader.js"
+  ],
+  "commits": [
+   {
+    "message": "refactor: lazy-load illustration categories"
+   },
+   {
+    "message": "perf: code-split illustration imports"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_039",
+    "body": "Looks good.",
+    "submitted_at": "2026-08-29T17:32:48.740174+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 119,
+  "title": "Ship combined icon sprite",
+  "body": "Combined 180 frequently used icons into single SVG sprite. Reduces HTTP requests from 42 to 1 on settings page. Verified with Tomas.",
+  "author": "p_040",
+  "created_at": "2026-09-08T16:45:16.270996+00:00",
+  "merged_at": "2026-09-10T10:26:31.805871+00:00",
+  "files": [
+   "web/design-system/iconSprite.svg",
+   "web/design-system/iconRegistry.js"
+  ],
+  "commits": [
+   {
+    "message": "perf: build combined SVG sprite for icons"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 120,
+  "title": "Document icon usage guidelines",
+  "body": "Added usage docs for icon sizes, color props, and illustration alt-text rules. Includes Storybook examples Kofi asked for.",
+  "author": "p_040",
+  "created_at": "2026-09-17T13:39:26.322596+00:00",
+  "merged_at": "2026-09-18T07:15:29.856914+00:00",
+  "files": [
+   "web/design-system/README.md"
+  ],
+  "commits": [
+   {
+    "message": "docs: add icon and illustration usage guide"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_039",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-17T14:50:00.968880+00:00"
+   }
+  ]
+ },
+ {
+  "repo": "web",
+  "number": 121,
+  "title": "Fix illustration a11y props",
+  "body": "Illustrations missing aria-hidden and title fallback failing a11y audit (axe 4.8). Added role=img handling and decorative flag.",
+  "author": "p_040",
+  "created_at": "2026-09-23T12:51:46.753388+00:00",
+  "merged_at": "2026-09-25T09:29:23.186830+00:00",
+  "files": [
+   "web/design-system/illustrations.jsx",
+   "web/design-system/Icon.jsx"
+  ],
+  "commits": [
+   {
+    "message": "fix: add a11y props to illustrations"
+   }
+  ],
+  "reviews": [
+   {
+    "reviewer": "p_039",
+    "body": "Looks good.",
+    "submitted_at": "2026-09-23T14:19:47.003224+00:00"
+   }
+  ]
+ }
+]

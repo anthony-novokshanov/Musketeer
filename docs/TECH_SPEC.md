@@ -1,4 +1,4 @@
-# Bridge (working name) — Technical Spec
+# Musketeer — Technical Spec
 
 HackGT 13 · Meta track ("Bringing people closer together with AI").
 This document is the source of truth for implementation. Build only what is specified here. If something is ambiguous, pick the simplest option that satisfies the spec and leave a `// SPEC-QUESTION:` comment.
@@ -7,7 +7,7 @@ This document is the source of truth for implementation. Build only what is spec
 
 ## 1. Product in one paragraph
 
-Bridge automatically connects employees who do similar work but don't know each other. When new work reaches someone (an email, a Slack message, a PR review request), AI detects it, finds colleagues who have done similar work, and connects them in Slack so they can talk. The product surface is a **manager dashboard**: a zoomable graph (orgs → teams → people) showing who could help whom, which connections happened, and which teams should be talking, plus a synopsis page with stats. Employees never open a new app; they only see Slack messages.
+Musketeer automatically connects employees who do similar work but don't know each other. When new work reaches someone (an email, a Slack message, a PR review request), AI detects it, finds colleagues who have done similar work, and connects them in Slack so they can talk. The product surface is a **manager dashboard**: a zoomable graph (orgs → teams → people) showing who could help whom, which connections happened, and which teams should be talking, plus a synopsis page with stats. Employees never open a new app; they only see Slack messages.
 
 ### Principles (do not violate)
 
@@ -115,9 +115,9 @@ ENABLE_GMAIL=true
 GMAIL_POLL_SEC=5
 GMAIL_CREDENTIALS=credentials.json     # OAuth desktop client
 GMAIL_TOKEN=token.json
-DEMO_EMAIL_FALLBACK_PERSON=p_031     # Jordan; confirm from seed_load output
+DEMO_EMAIL_FALLBACK_PERSON=p_031     # Anthony; confirm from seed_load output
 
-DEFAULT_VIEWER_ID=p_029                # t_events lead (Jordan's manager); confirm from seed_load output
+DEFAULT_VIEWER_ID=p_029                # t_events lead (Anthony's manager); confirm from seed_load output
 ENABLE_DEV_ROUTES=true
 
 TOPK_STORE=8                           # matches stored per person
@@ -387,7 +387,7 @@ Reasons must be one concrete sentence naming the shared work, <= 20 words.
 
 Used by Muse mode as the cached prefix. One line per person:
 ```
-[p_017] Priya Shah | Senior University Recruiter | University Recruiting (Recruiting) | Summary: ... | Focus: campus events, hackathon sponsorship, ...
+[p_017] Andy Shah | Senior University Recruiter | University Recruiting (Recruiting) | Summary: ... | Focus: campus events, hackathon sponsorship, ...
 ```
 For engineers append `| Code: {top 5 directories} | Langs: {langs}`.
 
@@ -550,8 +550,8 @@ repos:
 planted_overlaps:           # must surface as rank 1-2 matches; NO prior connections between these people
   - id: recruiting_mlh      # the recruiter story; also a team-level bridge t_uni <-> t_events
     people:
-      - {team: t_uni, persona: "Priya Shah, senior recruiter; ran MLH hackathon booths at 3 events this year"}
-      - {team: t_events, persona: "Jordan Lee, recruiter, new to hackathons; receives the live demo email"}
+      - {team: t_uni, persona: "Andy Shah, senior recruiter; ran MLH hackathon booths at 3 events this year"}
+      - {team: t_events, persona: "Anthony Novokshanov, recruiter, new to hackathons; receives the live demo email"}
     team_bridge: [t_uni, t_events]   # teams do overlapping campus/hackathon work; zero cross-team connections
   - id: kafka_lag
     people:
@@ -567,9 +567,9 @@ planted_overlaps:           # must surface as rank 1-2 matches; NO prior connect
       - {team: t_growth, persona: "PM who built the growth funnel dashboard in web/growth/funnels"}
 
 demo:
-  viewer: {team: t_events, role: lead}   # DEFAULT_VIEWER_ID; Jordan and Sam report to this person
-  email_recipient: Jordan Lee
-  slack_mapped: [viewer, Jordan Lee, Priya Shah]   # real Slack accounts on camera
+  viewer: {team: t_events, role: lead}   # DEFAULT_VIEWER_ID; Anthony and Sam report to this person
+  email_recipient: Anthony Novokshanov
+  slack_mapped: [viewer, Anthony Novokshanov, Andy Shah]   # real Slack accounts on camera
 
 activity_per_person:
   engineer: {prs: [5, 10], reviews: [3, 6], slack_messages: [3, 5]}
@@ -660,7 +660,7 @@ At demo scale the whole graph (~40 people, ≤ 320 edges) ships in one response 
   "orgs":   [{"id": "org_rec", "name": "Recruiting"}],
   "teams":  [{"id": "t_uni", "org_id": "org_rec", "name": "University Recruiting",
               "lead_id": "p_024", "summary": "..."}],
-  "people": [{"id": "p_024", "team_id": "t_uni", "name": "Priya Shah", "title": "...",
+  "people": [{"id": "p_024", "team_id": "t_uni", "name": "Andy Shah", "title": "...",
               "is_lead": true, "is_viewer_report": false, "needs_connection": false,
               "open_task": null}],
   "edges":  [{"a": "p_024", "b": "p_031", "score": 0.91, "rank": 1,
@@ -855,7 +855,7 @@ Acceptance: navigating root → org → team → person and back never shows mor
 **Phase 2 — Integration**: frontend on the real API, polling, live edge animation, search fly-to.
 
 **Phase 3 — Live loop**: task pipeline (§8.4), Slack bot flows (§10), actions, dev routes, Gmail poller, feedback loop.
-Acceptance: `POST /api/dev/simulate-event` for Jordan with the MLH email → Jordan's Slack DM suggests Priya within ~10 s → Connect → Priya's Sure → group DM with icebreaker → dashboard edge turns dashed, then solid after both send 2 messages. Nudge and lead intro work end to end. The same flow works from a real email.
+Acceptance: `POST /api/dev/simulate-event` for Anthony with the MLH email → Anthony's Slack DM suggests Andy within ~10 s → Connect → Andy's Sure → group DM with icebreaker → dashboard edge turns dashed, then solid after both send 2 messages. Nudge and lead intro work end to end. The same flow works from a real email.
 
 **Phase 4 — Mode B** (after the demo path is solid): embedder, embeddings in the pipeline, `HybridMatcher`.
 Acceptance: with `MATCHER_MODE=hybrid` and a pipeline rerun, all Phase 1A acceptance checks still pass; no other code changes are needed to switch modes.
@@ -875,16 +875,16 @@ Verify:
 Open decisions (defaults in place; change here if the team decides otherwise):
 - Synopsis and graph are **org-wide** for every manager (default) vs scoped to the manager's area.
 - Final threshold values (tune after the first pipeline run).
-- Product name ("Bridge" is a placeholder).
+- Product name: **Musketeer** (decided).
 
 ---
 
 ## 16. Demo video flow (what the build must support)
 
 1. Recruiter story as the hook (voiceover).
-2. Live email to Jordan: "Can you run our booth at the MLH hackathon next month?"
-3. Jordan's Slack DM suggests Priya with a reason → Connect → Priya (second screen) taps Sure → group DM with icebreaker; they exchange a couple of messages.
-4. Dashboard (viewer = Jordan's manager): the Jordan–Priya edge animates from dashed to solid.
+2. Live email to Anthony: "Can you run our booth at the MLH hackathon next month?"
+3. Anthony's Slack DM suggests Andy with a reason → Connect → Andy (second screen) taps Sure → group DM with icebreaker; they exchange a couple of messages.
+4. Dashboard (viewer = Anthony's manager): the Anthony–Andy edge animates from dashed to solid.
 5. Zoom root → Recruiting → teams → people; show the `t_uni`/`t_events` bridge and "Introduce the team leads."
 6. Amber dot on Sam → person panel → faint match to the Growth PM → "Suggest they reach out."
 7. Search "who has built rate limiting?" → fly-to.

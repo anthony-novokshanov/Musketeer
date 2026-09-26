@@ -139,3 +139,17 @@ GROUP BY day, event;
 SELECT add_continuous_aggregate_policy('connection_daily',
   start_offset => INTERVAL '90 days', end_offset => INTERVAL '1 hour',
   schedule_interval => INTERVAL '5 minutes');
+
+-- Intentional meetings: one row per booked meeting. Notes live in a Slack canvas; only its id is stored.
+CREATE TABLE meetings (
+  id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  connection_id   BIGINT NOT NULL REFERENCES connections(id) ON DELETE CASCADE,
+  parent_id       BIGINT REFERENCES meetings(id) ON DELETE CASCADE,  -- set for a follow-up
+  start_at        TIMESTAMPTZ NOT NULL,
+  event_link      TEXT,
+  meet_link       TEXT,
+  canvas_id       TEXT,
+  canvas_url      TEXT,
+  deliverable     TEXT,                                               -- title of the accepted deliverable
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);

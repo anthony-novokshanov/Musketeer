@@ -18,8 +18,11 @@ class Settings(BaseSettings):
 
     ENABLE_GMAIL: bool = False
     GMAIL_POLL_SEC: int = 5
+    GMAIL_QUERY: str = ""                       # required: which mail the demo may read, e.g. "to:me+musketeer@x.com"; fires once read
     GMAIL_CREDENTIALS: str = "credentials.json"
-    GMAIL_TOKEN: str = "token.json"
+    GOOGLE_TOKEN_DIR: str = "tokens"            # per-person Google sign-ins: python -m app.google <person_id>
+    DEMO_TIMEZONE: str = "America/New_York"
+    MEETING_MINUTES: int = 30
     DEMO_EMAIL_FALLBACK_PERSON: str = "p_031"
 
     DEFAULT_VIEWER_ID: str = "p_029"
