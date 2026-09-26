@@ -746,7 +746,7 @@ svg.focusing .hullg{opacity:.5}
         <div class="col-body" id="inbox"></div>
       </div>
       <div class="card col">
-        <div class="col-head"><span class="av bot" style="width:36px;height:36px" id="engLogo"></span><div class="grow"><div>Musketeer engine</div><small>What the system decides</small></div><span class="chip" id="clsChip">Conservative</span></div>
+        <div class="col-head"><span class="av bot" style="width:36px;height:36px" id="engLogo"></span><div class="grow"><div>Musketeer engine</div><small>What the system decides</small></div><span class="chip" id="clsChip">…</span></div>
         <div class="col-body" id="engine"></div>
       </div>
       <div class="card col">
@@ -778,14 +778,14 @@ svg.focusing .hullg{opacity:.5}
     <div class="set-grid">
       <div class="card">
         <h2 class="t-lg">Where work comes from</h2>
-        <p class="help" style="margin:8px 0 6px">Musketeer reads these sources for new assignments. Anything that isn't new work is ignored and never stored.</p>
+        <p class="help" style="margin:8px 0 6px">Musketeer reads these sources for new assignments. Changes apply as soon as you save.</p>
         <div id="srcRows"></div>
       </div>
       <div class="card">
         <h2 class="t-lg">How matching works</h2>
         <div class="set-block">
           <div class="nm" style="font-size:15px">Classifier</div>
-          <div class="seg" id="clsSeg"><button data-v="Conservative" class="on">Conservative</button><button data-v="Balanced">Balanced</button><button data-v="Eager">Eager</button></div>
+          <div class="seg" id="clsSeg"><button data-v="conservative">Conservative</button><button data-v="balanced">Balanced</button><button data-v="eager">Eager</button></div>
           <p class="help" id="clsHelp"></p>
         </div>
         <div class="set-block">
@@ -795,7 +795,7 @@ svg.focusing .hullg{opacity:.5}
         <div class="set-block" id="matchToggles"></div>
         <div class="set-block">
           <div class="nm" style="font-size:15px">Ask if it helped after</div>
-          <div class="seg" id="fuSeg"><button data-v="1">1 day</button><button data-v="3" class="on">3 days</button><button data-v="7">1 week</button></div>
+          <div class="seg" id="fuSeg"><button data-v="3">3 min (demo)</button><button data-v="1440">1 day</button><button data-v="4320">3 days</button><button data-v="10080">1 week</button></div>
         </div>
         <div style="display:flex;justify-content:flex-end;padding-top:6px"><button class="pill primary" id="saveSettings">Save changes</button></div>
       </div>
@@ -846,8 +846,8 @@ function logoMark(s){return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"
 /* ---------------- data: live from the Musketeer API ---------------- */
 const API=(location.protocol==='file:'?'http://localhost:8000':'')+'/api';
 const POLL_MS=3000;
-async function api(path,body){
-  const r=await fetch(API+path,body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+async function api(path,body,method='POST'){
+  const r=await fetch(API+path,body===undefined?undefined:{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(j.error||`${r.status} ${r.statusText}`);
   return j;
@@ -955,7 +955,7 @@ $('#aiSpark').innerHTML=ic('sparkle');
 $('#gsIcon').innerHTML=ic('search','i sm');
 $('#zIn').innerHTML=ic('plus');$('#zOut').innerHTML=ic('minus');$('#zFit').innerHTML=ic('fit');
 $('#resetIc').innerHTML=ic('refresh','i sm');$('#playIc').innerHTML=ic('play','i sm');
-$('#sources').innerHTML=['mail','hash','cal','ticket','linear'].map(n=>`<span class="src">${ic(n,'i sm')}</span>`).join('');
+/* #sources is filled from the real settings (renderSources) */
 
 /* ---------------- synopsis: KPIs ---------------- */
 const SY={conn:0,help:0,cross:0,ttc:0,missed:0,health:0,dept:VIEWER_DEPT,metric:'share'};
@@ -1570,7 +1570,7 @@ const STEPS=[
  ['Find who has done it','Muse ranks colleagues by the substance of their past work, then favors people who have never met.'],
  ['Connect in Slack','The person with the new task gets a DM with the reason. The expert accepts with one tap.'],
  ['Start the conversation','A group DM opens with an icebreaker. Messages are counted, never stored.'],
- ['Follow up','A few minutes later both people are asked if it helped.']
+ ['Meet and follow up','Musketeer books a time that works for both, sets up shared notes, and helps them leave with a deliverable.']
 ];
 $('#steps').innerHTML=STEPS.map((s,i)=>`<div class="step" data-i="${i}"><div class="sdot">${i+1}</div><div class="st">${s[0]}</div><div class="sd">${s[1]}</div></div>`).join('');
 function setStep(i,state){const el=$(`.step[data-i="${i}"]`);el.classList.remove('active','done');if(state)el.classList.add(state);el.querySelector('.sdot').innerHTML=state==='done'?ic('check','i sm'):i+1}
@@ -1625,7 +1625,7 @@ function demoInit(){
   $('#jTitle').textContent='Musketeer';$('#pTitle').textContent='Musketeer';
 }
 async function runLive(){
-  const id=++DEMO.run,live=()=>id===DEMO.run;
+  const id=++DEMO.run,live=()=>id===DEMO.run;DEMO.sending=true;
   const to=P[DEMO_TO],me=P[VIEWER];
   const subj=$('#cSubj').value.trim()||'New request',body=$('#cBody').value.trim();
   $('#compose').innerHTML=`<div class="fld" style="align-items:center">${ic('check','i sm')}<b>Sent to ${to.name}</b></div>`;
@@ -1636,7 +1636,8 @@ async function runLive(){
   $('#log').innerHTML=`<div class="log-item new"><span class="ic">${ic('mail','i sm')}</span><div style="min-width:0"><div class="s1">${esc(subj)}</div><div class="s2">${me.name} · just now</div></div><span class="chip" id="verdict">Muse is reading…</span></div>`;
   let res;
   try{res=await api('/dev/simulate-event',{person_id:DEMO_TO,title:subj,text:body})}
-  catch(err){if(live()){$('#verdict').textContent='Error';$('#extract').classList.remove('empty');$('#extract').textContent=err.message;setStep(0,null)}return}
+  catch(err){DEMO.sending=false;if(live()){$('#verdict').textContent='Error';$('#extract').classList.remove('empty');$('#extract').textContent=err.message;setStep(0,null)}return}
+  DEMO.sending=false;
   if(!live())return;
   const secs=((performance.now()-t0)/1000).toFixed(1),det=res.detection,v=$('#verdict');
   if(!res.task_id){
@@ -1671,7 +1672,7 @@ async function runLive(){
    the real taps happen in Slack (or are simulated for people without a Slack account). */
 async function followConnection(id,connId,to,h,summary,reason,secs){
   const live=()=>id===DEMO.run,J=$('#chatJ'),Pn=$('#chatP'),seen=new Set(),t0=Date.now();
-  let waitJ=null,waitP=null,countLines=null,lastCount=0;
+  let waitJ=null,waitP=null,countLines=null,lastCount=0;const shownMeetings=new Set();FOLLOWED.add(connId);
   while(live()&&Date.now()-t0<20*60e3){
     let pair=null;try{pair=await api(`/pairs/${to.id}/${h.id}`)}catch(e){}
     if(!live())return;
@@ -1681,11 +1682,12 @@ async function followConnection(id,connId,to,h,summary,reason,secs){
         const k=`${ev.event}|${ev.time}|${ev.person_id||''}`;if(seen.has(k))continue;seen.add(k);
         if(ev.event==='suggested'){
           msg(J,{who:'bot',time:tm(ev.time),html:`New task spotted: <b>${esc(summary)}</b>. <b>${h.name}</b> on ${T[h.team].name} ${esc(lf(reason))}. Want to connect?`,acts:['Connect','Not now']}).forEach(b=>b.disabled=true);
-          waitJ=statusLine(J,`${ic('clock','i sm')} Sent to ${to.first} in Slack. Waiting for a tap on <b>Connect</b>…`);
+          waitJ=statusLine(J,`${ic('clock','i sm')} Sent to ${to.first} in Slack. When they tap <b>Connect</b>, they write what they need (and attach docs) before ${h.first} is notified…`);
         }else if(ev.event==='requested'){
           if(waitJ)waitJ.remove();
           msg(J,{who:'bot',time:tm(ev.time),html:`Done. I asked ${h.first} if they can help.`});
-          msg(Pn,{who:'bot',time:tm(ev.time),html:`<b>${to.name}</b> (${T[to.team].name}) is working on <b>${esc(summary)}</b>. You were suggested because you ${esc(lf(reason))}. Up for a quick chat?`,acts:['Sure',"Can't right now"]}).forEach(b=>b.disabled=true);
+          const note=c.request_note?`<br><i>“${esc(c.request_note)}”</i>`+(c.request_links.length?`<br>Attached: ${c.request_links.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//,'').slice(0,40))}</a>`).join(' · ')}`:''):'';
+          msg(Pn,{who:'bot',time:tm(ev.time),html:`<b>${to.name}</b> (${T[to.team].name}) ${c.request_note?'would like your help with':'is working on'} <b>${esc(summary)}</b>.${note}<br>You were suggested because you ${esc(lf(reason))}. Up for a quick chat?`,acts:['Sure',"Can't right now"]}).forEach(b=>b.disabled=true);
           waitP=statusLine(Pn,`${ic('clock','i sm')} Waiting for ${h.first} to answer…`);
         }else if(ev.event==='accepted'){
           if(waitP)waitP.remove();setStep(2,'done');setStep(3,'active');
@@ -1710,6 +1712,15 @@ async function followConnection(id,connId,to,h,summary,reason,secs){
       if(c.message_count>lastCount){lastCount=c.message_count;
         const t=`${ic('chat','i sm')} ${c.message_count} message${c.message_count===1?'':'s'} in the group DM. Musketeer counts them and never stores what was said.`;
         if(countLines)countLines.forEach(x=>x.innerHTML=t);else countLines=[statusLine(J,t),statusLine(Pn,t)]}
+      for(const m of c.meetings||[]){
+        const start=new Date(m.start_at),when=`${start.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}, ${tm(m.start_at)}`;
+        if(!shownMeetings.has(m.id)){shownMeetings.add(m.id);setStep(4,'active');
+          [J,Pn].forEach(p=>statusLine(p,`${ic('cal','i sm')} ${m.is_follow_up?'Follow-up':'Meeting'} booked for <b>${when}</b>${m.meet_link?` · <a href="${esc(m.meet_link)}" target="_blank" rel="noopener">Google Meet</a>`:''}`))}
+        if(m.canvas_url&&!shownMeetings.has('c'+m.id)){shownMeetings.add('c'+m.id);
+          [J,Pn].forEach(p=>statusLine(p,`${ic('link','i sm')} Shared meeting notes are ready: <a href="${esc(m.canvas_url)}" target="_blank" rel="noopener">open the page</a>. Muse drafted the context.`))}
+        if(m.deliverable&&!shownMeetings.has('d'+m.id)){shownMeetings.add('d'+m.id);setStep(4,'done');
+          [J,Pn].forEach(p=>statusLine(p,`${ic('check','i sm')} Deliverable accepted: <b>${esc(m.deliverable)}</b>.`))}
+      }
       const rated=[c.helpful_requester,c.helpful_helper].filter(x=>x!=null);
       if(rated.length===2){setStep(4,'done');[J,Pn].forEach(p=>statusLine(p,`${ic('check','i sm')} Both answered: ${rated.every(Boolean)?'helpful':'mixed'}.`));return}
       if(c.status==='expired')return;
@@ -1718,6 +1729,28 @@ async function followConnection(id,connId,to,h,summary,reason,secs){
   }
 }
 $('#demoRun').addEventListener('click',cineOpen);
+/* Real runs (an email opened in Gmail, a Slack mention) show up here too: follow Anthony's newest live connection. */
+const FOLLOWED=new Set(),PAGE_T0=Date.now();
+async function showRealRun(c){
+  const id=++DEMO.run,to=P[DEMO_TO],h=P[c.other_id];if(!h)return;
+  let pair;try{pair=await api(`/pairs/${to.id}/${h.id}`)}catch(e){return}
+  const conn=pair.connections.find(x=>x.id===c.id);if(!conn||id!==DEMO.run)return;
+  demoInit();DEMO.run=id;
+  const summary=conn.task_summary||'New work',reason=pair.reason||'';
+  $('#compose').innerHTML=`<div class="fld" style="align-items:center">${ic('mail','i sm')}<b>Real email to ${to.name} (opened in Gmail)</b></div>`;
+  $('#log').innerHTML=`<div class="log-item new"><span class="ic">${ic('mail','i sm')}</span><div style="min-width:0"><div class="s1">${esc(summary)}</div><div class="s2">Detected when ${to.first} read it</div></div><span class="chip task">New task</span></div>`;
+  $('#extract').classList.remove('empty');$('#extract').textContent=summary;
+  $('#rank').innerHTML=`<div class="cand win"><div class="cand-top">${av(h.id,32)}<div style="min-width:0"><div class="nm">${h.name}</div><small>${T[h.team].name}</small></div><span class="score">${Math.round(100*(pair.score||0))}</span></div><div style="font-size:13px;color:var(--text-secondary);margin-top:6px">${esc(reason)}</div><div class="note" style="display:flex;gap:6px;margin-top:10px"><span class="chip talked">${ic('check','i sm')}Match</span></div></div>`;
+  $('#pAv').textContent=h.ini;$('#pSub').textContent=`Slack · ${h.first}'s screen`;
+  setStep(0,'done');setStep(1,'done');setStep(2,'active');
+  followConnection(id,c.id,to,h,summary,reason,'—').catch(err=>{if(err!=='reset')console.error(err)});
+}
+setInterval(async()=>{
+  if($('#page-connections').hidden||DEMO.sending||document.hidden)return;
+  let d;try{d=await api('/people/'+DEMO_TO)}catch(e){return}
+  const c=d.connections.find(x=>x.origin==='auto'&&!FOLLOWED.has(x.id)&&new Date(x.created_at)>PAGE_T0-15*60e3&&['suggested','requested','accepted','active'].includes(x.status));
+  if(c){FOLLOWED.add(c.id);showRealRun(c)}
+},3000);
 $('#demoReset').addEventListener('click',async()=>{
   const b=$('#demoReset');b.disabled=true;DEMO.run++;
   try{await api('/dev/reset-demo',{});await refreshGraph();refreshSynopsis();toast('Demo reset: live tasks and connections cleared')}
@@ -2012,16 +2045,50 @@ function renderTeams(){
 $$('#teamSort button').forEach(b=>b.addEventListener('click',()=>{teamSort=b.dataset.s;$$('#teamSort button').forEach(x=>x.classList.toggle('on',x===b));renderTeams()}));
 
 /* ---------------- Settings ---------------- */
-const SRC=[['mail','Gmail','Emails that assign work',true],['mail','Outlook','Emails that assign work',false],['hash','Slack','Messages and mentions that assign work',true],['cal','Calendar','New invites for projects or events',true],['ticket','Jira','Issues assigned to someone',true],['linear','Linear','Issues assigned to someone',false]];
-$('#srcRows').innerHTML=SRC.map((s,i)=>`<div class="set-row"><span class="src" style="margin:0;outline:0">${ic(s[0],'i sm')}</span><div><div class="nm">${s[1]}</div><small>${s[2]}</small></div><label class="switch"><input type="checkbox" id="src${i}" ${s[3]?'checked':''} aria-label="${s[1]}"><span class="tr"></span></label></div>`).join('');
-const MT=[['Wait for meetings and focus time to end','Requests to busy people are held, and the asker is told when to expect a reply.',true],['Prefer people who haven\'t met','Favors new connections across teams, which is where the hidden overlaps are.',true],['Connect team leads for team-level work','When a task belongs to a whole team, both leads get a short brief on the other team.',true],['Ask the expert before opening a chat','The expert accepts with one tap. They are never added to a chat without asking.',true]];
-$('#matchToggles').innerHTML=MT.map((m,i)=>`<div class="set-row" style="grid-template-columns:minmax(0,1fr) auto;padding:10px 0;border:0"><div><div class="nm">${m[0]}</div><small>${m[1]}</small></div><label class="switch"><input type="checkbox" id="mt${i}" ${m[2]?'checked':''} aria-label="${m[0]}"><span class="tr"></span></label></div>`).join('');
-const CLS_HELP={Conservative:'Only flags messages that clearly assign new work. A wrong match costs trust, and a missed one costs little.',Balanced:'Also flags soft asks like "could you look into…". Expect a few more suggestions and an occasional miss.',Eager:'Flags anything that might be new work. Best for trying Musketeer on a small team first.'};
-function segInit(id,cb){$$('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{$$('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));cb&&cb(b.dataset.v)}))}
-segInit('clsSeg',v=>{$('#clsHelp').textContent=CLS_HELP[v];$('#clsChip').textContent=v});segInit('fuSeg');
-$('#clsHelp').textContent=CLS_HELP.Conservative;
-$('#maxReq').addEventListener('input',e=>{$('#maxReqOut').textContent=e.target.value;syncRange(e.target)});syncRange($('#maxReq'));
-$('#saveSettings').addEventListener('click',()=>toast('Settings saved'));
+/* Settings are stored by the backend (GET/PUT /api/settings) and used immediately by the pipeline. */
+const SRC=[['gmail','mail','Gmail','Emails to the demo address that assign work'],['outlook','mail','Outlook','Emails that assign work'],
+ ['slack','hash','Slack','Channel mentions that assign work'],['calendar','cal','Google Calendar','Finds times both people are free, and holds requests during meetings'],
+ ['jira','ticket','Jira','Issues assigned to someone'],['linear','linear','Linear','Issues assigned to someone']];
+const REAL_SRC=['gmail','slack','calendar'];
+const MT=[['wait_for_busy','Wait for meetings and focus time to end','Requests to someone in a meeting are held, and the asker is told when to expect a reply.'],
+ ['prefer_new_connections',"Prefer people who haven't met",'Favors new connections across teams, which is where the hidden overlaps are.'],
+ ['team_leads','Connect team leads for team-level work','When a task belongs to a whole team, the two team leads are introduced too.'],
+ [null,'Ask the expert before opening a chat','The expert accepts with one tap and is never added to a chat without asking. Always on.']];
+const CLS_HELP={conservative:'Acts only when Muse is at least 85% sure a message gives someone new work. A wrong match costs trust; a missed one costs little.',
+ balanced:'Acts when Muse is at least 70% sure. Also catches soft asks like "could you look into…".',
+ eager:'Acts when Muse is at least 50% sure. Best for trying Musketeer on a small team first.'};
+const CLS_LABEL={conservative:'Conservative',balanced:'Balanced',eager:'Eager'};
+function segSet(id,v){$$('#'+id+' button').forEach(x=>x.classList.toggle('on',x.dataset.v===String(v)))}
+function segVal(id){const b=$('#'+id+' button.on');return b&&b.dataset.v}
+function segInit(id,cb){$$('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{segSet(id,b.dataset.v);cb&&cb(b.dataset.v)}))}
+const toggle=(attrs,label)=>`<label class="switch"><input type="checkbox" ${attrs} aria-label="${label}"><span class="tr"></span></label>`;
+function renderSources(p){
+  const on=[['gmail','mail','Gmail'],['slack','hash','Slack'],['calendar','cal','Google Calendar']].filter(([k])=>p.available[k]&&p.sources[k]);
+  $('#sources').innerHTML=on.map(([,i])=>`<span class="src">${ic(i,'i sm')}</span>`).join('');
+  $('#sources').title=on.length?`Live sources: ${on.map(x=>x[2]).join(', ')}`:'No live sources';
+}
+function renderSettings(p){
+  $('#srcRows').innerHTML=SRC.map(([k,icon,name,desc])=>{
+    const real=REAL_SRC.includes(k),avail=real&&p.available[k],note=!real?'Not connected':!avail?'Not set up on this server':'';
+    return `<div class="set-row"><span class="src" style="margin:0;outline:0">${ic(icon,'i sm')}</span><div><div class="nm">${name}</div><small>${note?`<b>${note}</b> · `:''}${desc}</small></div>${toggle(`data-src="${k}" ${avail&&p.sources[k]?'checked':''} ${avail?'':'disabled'}`,name)}</div>`}).join('');
+  $('#matchToggles').innerHTML=MT.map(([k,name,desc])=>`<div class="set-row" style="grid-template-columns:minmax(0,1fr) auto;padding:10px 0;border:0"><div><div class="nm">${name}</div><small>${desc}</small></div>${toggle(k?`data-pref="${k}" ${p[k]?'checked':''}`:'checked disabled',name)}</div>`).join('');
+  segSet('clsSeg',p.classifier);$('#clsHelp').textContent=CLS_HELP[p.classifier];$('#clsChip').textContent=CLS_LABEL[p.classifier];
+  $('#maxReq').value=p.max_requests_per_week;$('#maxReqOut').textContent=p.max_requests_per_week;syncRange($('#maxReq'));
+  segSet('fuSeg',p.feedback_after_min);
+  renderSources(p);
+}
+segInit('clsSeg',v=>{$('#clsHelp').textContent=CLS_HELP[v]});segInit('fuSeg');
+$('#maxReq').addEventListener('input',e=>{$('#maxReqOut').textContent=e.target.value;syncRange(e.target)});
+$('#saveSettings').addEventListener('click',async()=>{
+  const body={classifier:segVal('clsSeg'),max_requests_per_week:+$('#maxReq').value,sources:{}};
+  $$('#srcRows [data-src]:not(:disabled)').forEach(i=>body.sources[i.dataset.src]=i.checked);
+  $$('#matchToggles [data-pref]').forEach(i=>body[i.dataset.pref]=i.checked);
+  const fu=segVal('fuSeg');if(fu)body.feedback_after_min=+fu;
+  const b=$('#saveSettings');b.disabled=true;
+  try{renderSettings(await api('/settings',body,'PUT'));toast('Saved. Musketeer is using these settings now.')}catch(err){toast(err.message)}
+  b.disabled=false;
+});
+api('/settings').then(renderSettings).catch(err=>toast(`Couldn't load settings: ${err.message}`));
 
 /* ---------------- header: bell + search ---------------- */
 const NOTES=[

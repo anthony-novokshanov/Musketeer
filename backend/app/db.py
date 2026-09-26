@@ -48,18 +48,24 @@ async def execute(sql: str, params: dict | tuple | None = None) -> None:
 
 DROP_ALL = """
 DROP MATERIALIZED VIEW IF EXISTS connection_daily CASCADE;
-DROP TABLE IF EXISTS meetings, connection_events, connections, team_overlaps, similarities,
+DROP TABLE IF EXISTS app_settings, meetings, connection_events, connections, team_overlaps, similarities,
   tasks, activity_events, people, teams, orgs CASCADE;
 """
 
 
-async def apply_schema(reset: bool = False) -> None:
+async def apply_schema(reset: bool = False, allow_public_reset: bool = False) -> None:
     """Apply sql/schema.sql one statement at a time in autocommit mode
-    (continuous aggregates can't be created inside a transaction)."""
+    (continuous aggregates can't be created inside a transaction).
+
+    reset drops every table first. Wiping the real `public` schema is refused unless the caller
+    explicitly opts in (only `python -m scripts.seed_load --reset` does); tests never can."""
     sql = re.sub(r"--[^\n]*", "", SCHEMA_FILE.read_text())
     statements = [s.strip() for s in sql.split(";") if s.strip()]
     async with await psycopg.AsyncConnection.connect(settings.DATABASE_URL, autocommit=True) as conn:
         if reset:
+            schema = (await (await conn.execute("SELECT current_schema()")).fetchone())[0]
+            if schema == "public" and not allow_public_reset:
+                raise RuntimeError("refusing to drop the real `public` tables; only `seed_load --reset` may do that")
             await conn.execute(DROP_ALL)
         search_path = (await (await conn.execute("SHOW search_path")).fetchone())[0]
         for stmt in statements:

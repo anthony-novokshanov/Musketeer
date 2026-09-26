@@ -148,3 +148,20 @@ async def test_booking_needs_both_people(monkeypatch):
     assert "Waiting for Anthony" in again["text"] and not booked
     done = await flows.approve_meeting(1, start, 0, "p_b", "p_a")                   # Anthony confirms
     assert done["text"].startswith("Both confirmed") and len(booked) == 1
+
+
+async def test_busy_until_merges_back_to_back_blocks(monkeypatch):
+    now = datetime.now(TZ)
+    blocks = [(now - timedelta(minutes=10), now + timedelta(minutes=20)),       # in a meeting now
+              (now + timedelta(minutes=20), now + timedelta(minutes=50)),       # straight into another
+              (now + timedelta(hours=2), now + timedelta(hours=3))]             # later, after a gap
+    monkeypatch.setattr(calendar, "_busy", lambda pid, s, e: blocks)
+    end = await calendar.busy_until("p_x")
+    assert abs((end - (now + timedelta(minutes=50))).total_seconds()) < 2
+    monkeypatch.setattr(calendar, "_busy", lambda pid, s, e: [(now + timedelta(hours=1), now + timedelta(hours=2))])
+    assert await calendar.busy_until("p_x") is None                           # free right now
+
+
+def test_request_held_message():
+    at = datetime(2026, 10, 5, 14, 30, tzinfo=TZ)
+    assert messages.request_held("Andy", at)["text"].startswith("Andy is in a meeting until 2:30 PM")

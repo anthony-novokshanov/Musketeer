@@ -113,7 +113,9 @@ CREATE TABLE connections (
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
   accepted_at           TIMESTAMPTZ,
   active_at             TIMESTAMPTZ,
-  closed_at             TIMESTAMPTZ
+  closed_at             TIMESTAMPTZ,
+  request_note          TEXT,                                   -- what the requester wrote to the helper
+  request_links         TEXT[] NOT NULL DEFAULT '{}'            -- docs the requester attached
 );
 CREATE INDEX connections_requester ON connections (requester_id);
 CREATE INDEX connections_helper    ON connections (helper_id);
@@ -152,4 +154,11 @@ CREATE TABLE meetings (
   canvas_url      TEXT,
   deliverable     TEXT,                                               -- title of the accepted deliverable
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Manager-editable settings from the dashboard (one JSON document under key 'prefs').
+CREATE TABLE app_settings (
+  key        TEXT PRIMARY KEY,
+  value      JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

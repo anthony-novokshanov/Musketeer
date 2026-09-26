@@ -149,13 +149,13 @@ async def create_seed_history(roster: dict, spec: dict, rng: random.Random) -> i
     return len(statuses)
 
 
-async def load(fixtures: Path, reset: bool) -> dict:
+async def load(fixtures: Path, reset: bool, allow_public_reset: bool = False) -> dict:
     roster = json.loads((fixtures / "roster.json").read_text(encoding="utf-8"))
     spec = yaml.safe_load(SEED_SPEC.read_text(encoding="utf-8"))
     shift = datetime.now(timezone.utc) - datetime.fromisoformat(roster["generated_at"])
 
     if reset:
-        await apply_schema(reset=True)
+        await apply_schema(reset=True, allow_public_reset=allow_public_reset)
     await load_roster(roster)
     mapped = await load_slack_map(roster)
     n_events = await load_events(fixtures, shift)
@@ -168,7 +168,7 @@ async def load(fixtures: Path, reset: bool) -> dict:
 async def main(fixtures: Path, reset: bool) -> None:
     await pool.open()
     try:
-        summary = await load(fixtures, reset)
+        summary = await load(fixtures, reset, allow_public_reset=True)  # the one place allowed to wipe public
     finally:
         await pool.close()
     for k, v in summary.items():

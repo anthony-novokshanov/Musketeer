@@ -3,6 +3,7 @@ Connection group DMs are never ingested here; they are only counted (flows.count
 import re
 from datetime import datetime, timezone
 
+from app import prefs
 from app.db import fetch_all
 from app.pipeline.tasks import ingest_received
 from app.schemas import NormalizedEvent
@@ -11,6 +12,8 @@ MENTION = re.compile(r"<@([A-Z0-9]+)>")
 
 
 async def ingest_channel_message(event: dict) -> list[dict]:
+    if not (await prefs.get()).sources.slack:
+        return []
     text = event.get("text") or ""
     mentioned = set(MENTION.findall(text)) - {event.get("user")}
     if not mentioned:

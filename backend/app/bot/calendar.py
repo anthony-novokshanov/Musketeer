@@ -39,6 +39,18 @@ def _busy(person_id: str, start: datetime, end: datetime) -> list[tuple[datetime
             for b in res["calendars"]["primary"].get("busy", [])]
 
 
+async def busy_until(person_id: str, max_hold_hours: int = 4) -> datetime | None:
+    """If this person's calendar is busy right now, when the busy stretch ends (capped); else None."""
+    tz = ZoneInfo(settings.DEMO_TIMEZONE)
+    now = datetime.now(tz)
+    blocks = sorted(await asyncio.to_thread(_busy, person_id, now, now + timedelta(hours=max_hold_hours)))
+    end = None
+    for s, e in blocks:
+        if s <= (end or now) + timedelta(minutes=1):
+            end = max(end or now, e)
+    return min(end, now + timedelta(hours=max_hold_hours)).astimezone(tz) if end and end > now else None
+
+
 async def find_common_slot(person_ids: list[str], skip: int = 0) -> tuple[datetime, datetime] | None:
     tz = ZoneInfo(settings.DEMO_TIMEZONE)
     now = datetime.now(tz)

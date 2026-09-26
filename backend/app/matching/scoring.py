@@ -46,8 +46,9 @@ def finalize_reason(reason: str, shared_dirs: list[str]) -> str:
     return reason
 
 
-def adjust_task_candidate(score: float, interacted_before: bool, helper_requests_last_7_days: int) -> float:
+def adjust_task_candidate(score: float, interacted_before: bool, helper_requests_last_7_days: int,
+                          prefer_new: bool = True) -> float:
     adjusted = score
-    if not interacted_before:
+    if prefer_new and not interacted_before:
         adjusted += 0.10
     return adjusted - min(0.15, 0.05 * helper_requests_last_7_days)

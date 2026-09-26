@@ -1,6 +1,7 @@
 """Task pipeline (spec §8.4): received event -> detect task -> match -> maybe auto-suggest."""
 import logging
 
+from app import prefs
 from app.ai.muse import muse_json
 from app.bot import flows
 from app.config import settings
@@ -12,7 +13,6 @@ from app.schemas import DetectTaskOut, NormalizedEvent
 
 log = logging.getLogger("musketeer.tasks")
 
-MIN_TASK_CONFIDENCE = 0.7
 
 
 async def ingest_received(ev: NormalizedEvent) -> dict | None:
@@ -30,7 +30,8 @@ async def process_event(event_id: int) -> dict:
         "title": ev["title"] or "", "text": ev["text"], "recipient_name": ev["name"],
         "recipient_title": ev["person_title"], "recipient_team": ev["team"]}, DetectTaskOut)
     result = {"task_id": None, "detection": det.model_dump(), "candidates": [], "connection_id": None}
-    if not (det.is_new_task and det.confidence >= MIN_TASK_CONFIDENCE):
+    p = await prefs.get()
+    if not (det.is_new_task and det.confidence >= prefs.CLASSIFIER_CONFIDENCE[p.classifier]):
         return result
 
     task = await fetch_one("""INSERT INTO tasks (person_id, source_event_id, source, summary, task_type)
@@ -46,6 +47,8 @@ async def process_event(event_id: int) -> dict:
     await execute("UPDATE tasks SET best_match_score = %s WHERE id = %s", (best["adjusted"], task["id"]))
     if best["adjusted"] >= settings.AUTO_NOTIFY_THRESHOLD:
         result["connection_id"] = await _suggest(task["id"], ev["person_id"], best)
+        if det.team_level and p.team_leads:
+            await _introduce_leads(ev["person_id"], best["person_id"], det.summary)
     log.info("task %s for %s: best %s (%.2f) -> %s", task["id"], ev["person_id"], best["person_id"],
              best["adjusted"], "suggested" if result["connection_id"] else "open")
     return result
@@ -53,23 +56,31 @@ async def process_event(event_id: int) -> dict:
 
 async def rank_candidates(task_id: int, requester_id: str) -> list[dict]:
     """Matcher candidates with the §8.4 step-4 adjustments, best first."""
+    settings_ = await prefs.get()
     matches = await get_matcher().rank_for_task(task_id)
     if not matches:
         return []
+    # A connection only counts once the helper was actually asked (a 'requested' event): pending or
+    # dismissed suggestions never reached them. Teammates (incl. your manager) already know each other.
     info = {r["id"]: r for r in await fetch_all("""
+        WITH asked AS (
+          SELECT c.* FROM connections c
+          WHERE EXISTS (SELECT 1 FROM connection_events e WHERE e.connection_id = c.id AND e.event = 'requested'))
         SELECT p.id, p.available,
-               EXISTS (SELECT 1 FROM connections c WHERE p.id IN (c.requester_id, c.helper_id)
-                                                     AND %(r)s IN (c.requester_id, c.helper_id)) AS interacted,
-               (SELECT count(*) FROM connections c WHERE c.helper_id = p.id
-                                                     AND c.created_at > now() - INTERVAL '7 days') AS recent_requests
+               p.team_id = (SELECT team_id FROM people WHERE id = %(r)s)
+               OR EXISTS (SELECT 1 FROM asked c WHERE p.id IN (c.requester_id, c.helper_id)
+                                                  AND %(r)s IN (c.requester_id, c.helper_id)) AS interacted,
+               (SELECT count(*) FROM asked c WHERE c.helper_id = p.id
+                                               AND c.created_at > now() - INTERVAL '7 days') AS recent_requests
         FROM people p WHERE p.id = ANY(%(ids)s)""", {"r": requester_id, "ids": [m.person_id for m in matches]})}
     out = []
     for m in matches:
         p = info.get(m.person_id)
-        if not p or not p["available"] or m.person_id == requester_id:
+        if not p or not p["available"] or m.person_id == requester_id or p["recent_requests"] >= settings_.max_requests_per_week:
             continue
         out.append({"person_id": m.person_id, "score": m.score, "reason": m.reason,
-                    "adjusted": adjust_task_candidate(m.score, p["interacted"], p["recent_requests"])})
+                    "adjusted": adjust_task_candidate(m.score, p["interacted"], p["recent_requests"],
+                                                       settings_.prefer_new_connections)})
     return sorted(out, key=lambda c: -c["adjusted"])
 
 
@@ -91,3 +102,19 @@ async def retry_next_candidate(task_id: int) -> int | None:
             return await _suggest(task_id, task["person_id"], nxt)
     await execute("UPDATE tasks SET status = 'open' WHERE id = %s", (task_id,))
     return None
+
+
+async def _introduce_leads(requester_id: str, helper_id: str, summary: str) -> None:
+    """Team-level work: also introduce the two teams' leads (once; skipped within a team)."""
+    leads = await fetch_one("""
+        SELECT ta.lead_id AS a, tb.lead_id AS b, tb.name AS team_b
+        FROM people r JOIN teams ta ON ta.id = r.team_id, people h JOIN teams tb ON tb.id = h.team_id
+        WHERE r.id = %s AND h.id = %s AND ta.id <> tb.id""", (requester_id, helper_id))
+    if not leads or not leads["a"] or not leads["b"] or leads["a"] == leads["b"]:
+        return
+    if await fetch_one("""SELECT 1 FROM connections WHERE status IN ('suggested', 'requested', 'accepted', 'active')
+                          AND %(a)s IN (requester_id, helper_id) AND %(b)s IN (requester_id, helper_id)""",
+                       {"a": leads["a"], "b": leads["b"]}):
+        return
+    await flows.open_connection(leads["a"], leads["b"], "lead_intro",
+                                f"Both teams are taking on work like this: {summary}")

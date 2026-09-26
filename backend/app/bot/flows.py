@@ -14,7 +14,7 @@ from collections.abc import Awaitable, Callable
 from app.ai.muse import muse_json
 from datetime import datetime, timedelta
 
-from app import google
+from app import google, prefs
 from app.bot import calendar, messages
 from app.config import settings
 from app.db import execute, fetch_all, fetch_one
@@ -111,7 +111,7 @@ async def open_connection(requester_id: str, helper_id: str, origin: str, reason
         task = await fetch_one("SELECT summary FROM tasks WHERE id = %s", (task_id,))
         msg = messages.suggestion(row["id"], task["summary"], helper["name"], helper["team_name"], reason)
     else:
-        manager = await person(initiated_by)
+        manager = await person(initiated_by) if initiated_by else {"name": "Musketeer"}
         if origin == "manager_nudge":
             msg = messages.nudge(row["id"], manager["name"], helper["name"], helper["team_name"], reason)
         else:
@@ -130,14 +130,50 @@ async def _topic(conn: dict, requester: dict) -> str:
     return "work similar to yours"
 
 
-async def requester_accepts(conn_id: int) -> None:
+async def request_draft(conn_id: int) -> tuple[str, str] | None:
+    """(helper first name, prefilled message) for the Connect form, or None if the suggestion is no longer open."""
+    conn = await fetch_one("SELECT * FROM connections WHERE id = %s AND status = 'suggested'", (conn_id,))
+    if not conn:
+        return None
+    requester, helper = await person(conn["requester_id"]), await person(conn["helper_id"])
+    return first_name(helper), messages.request_draft(first_name(helper), lf_topic(await _topic(conn, requester)))
+
+
+def lf_topic(topic: str) -> str:
+    return topic[:1].lower() + topic[1:] if topic[:2] != topic[:2].upper() else topic
+
+
+async def requester_accepts(conn_id: int, note: str | None = None, links: list[str] | None = None) -> None:
+    """The requester is ready: store what they wrote (if anything) and send the request to the helper."""
     conn = await fetch_one("SELECT requester_id FROM connections WHERE id = %s", (conn_id,))
-    conn = await transition(conn_id, "requested", ("suggested",), person_id=conn["requester_id"])
+    conn = await transition(conn_id, "requested", ("suggested",), person_id=conn["requester_id"],
+                            request_note=note, request_links=links or [])
     if not conn:
         return
     requester, helper = await person(conn["requester_id"]), await person(conn["helper_id"])
+    p = await prefs.get()
+    if p.wait_for_busy and p.sources.calendar and google.has_account(helper["id"]):
+        try:
+            free_at = await calendar.busy_until(helper["id"])
+        except Exception:
+            log.exception("free/busy check failed; sending now")
+            free_at = None
+        if free_at:
+            # Respect meetings and focus time: hold the request and tell the requester when it goes out.
+            await deliver(requester, messages.request_held(first_name(helper), free_at))
+            spawn(lambda: send_request(conn_id), (free_at - datetime.now(free_at.tzinfo)).total_seconds())
+            return
+    await send_request(conn_id)
+
+
+async def send_request(conn_id: int) -> None:
+    conn = await fetch_one("SELECT * FROM connections WHERE id = %s", (conn_id,))
+    if conn["status"] != "requested":
+        return
+    requester, helper = await person(conn["requester_id"]), await person(conn["helper_id"])
     msg = messages.request(conn_id, requester["name"], requester["team_name"], await _topic(conn, requester),
-                           conn["reason"], reason_is_about_helper=conn["origin"] == "auto")
+                           conn["reason"], reason_is_about_helper=conn["origin"] == "auto",
+                           note=conn["request_note"], links=conn["request_links"])
     await deliver(helper, msg, on_simulated_yes=lambda: helper_accepts(conn_id))
 
 
@@ -230,11 +266,11 @@ async def count_message(channel_id: str, slack_user_id: str) -> None:
 
 
 async def request_due_feedback() -> int:
-    """Ask both people 'was this helpful?' FEEDBACK_AFTER_MIN after a connection went active."""
+    """Ask both people 'was this helpful?' feedback_after_min (Settings) after a connection went active."""
     due = await fetch_all("""UPDATE connections SET feedback_requested_at = now()
                              WHERE status = 'active' AND feedback_requested_at IS NULL
                                AND active_at < now() - make_interval(mins => %s)
-                             RETURNING id, requester_id, helper_id""", (settings.FEEDBACK_AFTER_MIN,))
+                             RETURNING id, requester_id, helper_id""", ((await prefs.get()).feedback_after_min,))
     for c in due:
         requester, helper = await person(c["requester_id"]), await person(c["helper_id"])
         await deliver(requester, messages.feedback(c["id"], helper["name"]))
@@ -261,7 +297,7 @@ async def propose_meeting(conn_id: int, skip: int = 0, follow_up_of: int | None 
     if not client or not conn or not conn["slack_channel_id"]:
         return
     channel, ids = conn["slack_channel_id"], [conn["requester_id"], conn["helper_id"]]
-    if not all(google.has_account(p) for p in ids):
+    if not (await prefs.get()).sources.calendar or not all(google.has_account(p) for p in ids):
         await client.chat_postMessage(channel=channel, text=messages.GRAB_15_REPLY)
         return
     try:
