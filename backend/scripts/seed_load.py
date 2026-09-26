@@ -149,6 +149,25 @@ async def create_seed_history(roster: dict, spec: dict, rng: random.Random) -> i
     return len(statuses)
 
 
+async def create_pending_intros(spec: dict) -> int:
+    """Intros that never resolve (seed_spec.pending_intros), so there is always something in progress."""
+    made = 0
+    for requester, helper in spec.get("pending_intros", []):
+        if await fetch_one("""SELECT 1 FROM connections WHERE LEAST(requester_id, helper_id) = LEAST(%(a)s, %(b)s)
+                              AND GREATEST(requester_id, helper_id) = GREATEST(%(a)s, %(b)s)""", {"a": requester, "b": helper}):
+            continue
+        row = await fetch_one("""
+            INSERT INTO connections (requester_id, helper_id, origin, reason, match_score, status, is_seed, created_at)
+            VALUES (%s, %s, 'auto', 'Similar recent work; intro sent, waiting on a reply.', 0.7, 'requested', true,
+                    now() - INTERVAL '8 days') RETURNING id, created_at""", (requester, helper))
+        for event, minutes, who in (("suggested", 0, None), ("requested", 3, requester)):
+            await execute("""INSERT INTO connection_events (time, connection_id, event, person_id)
+                             VALUES (%s + make_interval(mins => %s), %s, %s, %s)""",
+                          (row["created_at"], minutes, row["id"], event, who))
+        made += 1
+    return made
+
+
 async def load(fixtures: Path, reset: bool, allow_public_reset: bool = False) -> dict:
     roster = json.loads((fixtures / "roster.json").read_text(encoding="utf-8"))
     spec = yaml.safe_load(SEED_SPEC.read_text(encoding="utf-8"))
@@ -161,6 +180,7 @@ async def load(fixtures: Path, reset: bool, allow_public_reset: bool = False) ->
     n_events = await load_events(fixtures, shift)
     await create_amber_task(roster["amber_task"])
     n_conn = await create_seed_history(roster, spec, random.Random(42))
+    await create_pending_intros(spec)
     return {"people": len(roster["people"]), "events": n_events, "connections": n_conn,
             "slack_mapped": mapped, **roster.get("demo", {})}
 

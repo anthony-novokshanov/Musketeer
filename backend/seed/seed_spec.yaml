@@ -83,3 +83,10 @@ planted_details:          # extra concrete detail for planted personas, by overl
   amber_case:
     - "Has started building a referral tracking dashboard: sketching funnel charts (referred, screened, hired), conversion by referral source, and which events to instrument. Asks how others built dashboards; this is dashboard work more than event logistics."
     - "Built the growth funnel dashboard in web/growth/funnels: signup-to-activation conversion, cohort charts, and event instrumentation."
+
+# Intros that stay pending forever, so the dashboard always shows a few in-progress (moving dashed) links.
+# Seeded (is_seed) so /api/dev/reset-demo keeps them; dated >7 days ago so they don't count as recent load.
+pending_intros:
+  - [p_001, p_018]   # Payments Infrastructure <-> Ads Ranking
+  - [p_027, p_032]   # University Recruiting <-> Events & Community Recruiting
+  - [p_009, p_034]   # Messaging Infra <-> Growth Product
