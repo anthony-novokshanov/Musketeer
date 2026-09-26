@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings
+psycopg[binary]>=3.1
+psycopg_pool
+openai
+slack_bolt
+aiohttp
+google-api-python-client
+google-auth-oauthlib
+pyyaml
