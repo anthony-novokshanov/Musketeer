@@ -211,6 +211,12 @@ body.dragging{cursor:ew-resize;user-select:none}
 .fchip.off svg{opacity:.3}
 .simctl{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-secondary);height:40px;padding:0 16px;border:1px solid var(--border);border-radius:999px;background:var(--white)}
 .simctl output{color:var(--text-primary);min-width:34px;font-variant-numeric:tabular-nums}
+.simmode{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;border-bottom:1px dashed var(--border-hover,#BCC0C4);white-space:nowrap}
+.simmode:hover{color:var(--text-primary)}
+.simnum{width:52px;border:0;background:none;font:inherit;color:var(--text-primary);text-align:right;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+.simnum::-webkit-outer-spin-button,.simnum::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.simnum:focus{outline:2px solid #0064E0;outline-offset:2px;border-radius:6px}
+.simunit{color:var(--text-primary);min-width:12px}
 .gbody{position:relative;flex:1;min-height:0}
 #graphSvg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #graphSvg:active{cursor:grabbing}
@@ -580,6 +586,23 @@ svg.focusing .hullg{opacity:.5}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* team filter (graph) */
+.tf-btn{position:absolute;left:16px;top:16px;z-index:6;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tf-btn .cnt{font-size:12px;color:var(--text-secondary);margin-left:6px}
+.tfilter{position:absolute;left:16px;top:66px;z-index:6;width:280px;max-height:calc(100% - 82px);overflow:auto;background:#fff;
+  border:1px solid #E4E6EB;border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.10);padding:14px 14px 10px;font-size:14px}
+.tfilter .tf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tfilter .tf-head button{background:none;border:0;color:#0064E0;cursor:pointer;font:inherit;font-size:13px;padding:2px 4px}
+.tfilter .tf-org{border-top:1px solid #F0F2F5;padding:8px 0 4px}
+.tfilter label{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 2px;border-radius:8px}
+.tfilter label:hover{background:#F5F6F7}
+.tfilter .tf-orgname{font-weight:500}
+.tfilter .tf-team{padding-left:24px}
+.tfilter small{color:var(--text-secondary);margin-left:auto}
+.tfilter .only{visibility:hidden;background:none;border:0;color:#0064E0;cursor:pointer;font:inherit;font-size:12px;padding:0 2px}
+.tfilter label:hover .only{visibility:visible}
+.tfilter input{accent-color:#0064E0;width:15px;height:15px}
 </style>
 </head>
 <body>
@@ -702,7 +725,7 @@ svg.focusing .hullg{opacity:.5}
         <button class="pill fchip" data-f="talked" aria-pressed="true"><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#0081FB" stroke-width="2.5" stroke-linecap="round"/></svg>Talked</button>
         <button class="pill fchip" data-f="notified" aria-pressed="true"><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#8A8D91" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Notified</button>
         <button class="pill fchip" data-f="similar" aria-pressed="true"><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#BCC0C4" stroke-width="2" stroke-linecap="round"/></svg>Similar work</button>
-        <label class="simctl" for="simRange">Similarity <input type="range" class="rs" id="simRange" min="40" max="95" value="55"><output id="simOut">55%</output></label>
+        <div class="simctl"><button class="simmode" id="simMode" title="Switch between a similarity cutoff and only the strongest links">Similarity</button><input type="range" class="rs" id="simRange" min="40" max="95" value="55" aria-label="Similarity cutoff"><input type="number" class="simnum" id="simNum" value="55" min="40" max="95" aria-label="Similarity cutoff value"><span class="simunit" id="simUnit">%</span></div>
         <div class="seg" id="viewSeg" aria-label="Level of detail"><button data-v="people" class="on">People</button><button data-v="teams">Teams</button></div>
       </div>
       <div class="gbody" id="gbody">
@@ -1207,6 +1230,7 @@ $('#aiGo').addEventListener('click',()=>{go('graph');setTimeout(()=>focusDept(VI
 
 /* ---------------- GRAPH ---------------- */
 const GR={th:.55,show:{similar:true,notified:true,talked:true},selected:null,scope:{dept:null,team:null},fitted:false,fresh:null,ready:false,fitK:1,k:1,mix:1};
+let ALL_NODES=[],ALL_TNODES=[];
 let gsvg,vp,layerT,layerP,gTL,gTN,gHull,gPL,gPN,gPLH,gTLH,hitSel,tHitSel,gFx,zoom,sim,nodes=[],links=[],tnodes=[],tlinks=[],linkSel,nodeSel,hullSel,tLinkSel,tNodeSel;
 const RANK={similar:0,notified:1,talked:2};
 const pairKey=(a,b)=>a<b?a+"|"+b:b+"|"+a;
@@ -1219,15 +1243,23 @@ function curve(x1,y1,x2,y2,bend,r1,r2){
 }
 function bendFor(key,same){const h=hsh(key);return (h&1?1:-1)*(same?.06+(Math.abs(h)%3)*.02:.12+(Math.abs(h)%5)*.025)}
 function initGraph(){
-  gsvg=d3.select('#graphSvg');vp=gsvg.append('g');
+  gsvg=d3.select('#graphSvg');
+  /* background grid: moves and scales with the view so you can feel your depth */
+  const gdefs=gsvg.append('defs');
+  [['gridMinor',40,'#E4E6EB'],['gridMajor',200,'#D3D6DB']].forEach(([id,n,c])=>gdefs.append('pattern').attr('id',id).attr('width',n).attr('height',n)
+    .attr('patternUnits','userSpaceOnUse').append('path').attr('d',`M${n} 0H0V${n}`).attr('fill','none').attr('stroke',c).attr('stroke-width',1));
+  gsvg.append('rect').attr('class','grid-minor').attr('width','100%').attr('height','100%').attr('fill','url(#gridMinor)').style('pointer-events','none');
+  gsvg.append('rect').attr('class','grid-major').attr('width','100%').attr('height','100%').attr('fill','url(#gridMajor)').style('pointer-events','none');
+  vp=gsvg.append('g');
   layerT=vp.append('g').attr('class','layer-t');gTL=layerT.append('g');gTLH=layerT.append('g');gTN=layerT.append('g');
   layerP=vp.append('g').attr('class','layer-p');gHull=layerP.append('g');gPL=layerP.append('g');gPLH=layerP.append('g');gPN=layerP.append('g');
   gFx=vp.append('g');
-  zoom=d3.zoom().scaleExtent([.2,3]).on('zoom',e=>{vp.attr('transform',e.transform);GR.k=e.transform.k;applyLod();placeTeams();queueLinkVis();$('#gtip').hidden=true});
+  zoom=d3.zoom().scaleExtent([.2,3]).on('zoom',e=>{vp.attr('transform',e.transform);updateGrid(e.transform);GR.k=e.transform.k;applyLod();placeTeams();queueLinkVis();$('#gtip').hidden=true});
   gsvg.call(zoom).on('dblclick.zoom',null);
   gsvg.on('click',e=>{if(e.target===gsvg.node())closePanel()});
-  nodes=PEOPLE.map((p,i)=>{const t=T[p.team],a=i*2.4;return{id:p.id,kind:'person',p,team:t,r:18,x:t.c[0]+Math.cos(a)*40,y:t.c[1]+Math.sin(a)*40}});
-  tnodes=TEAMS.map(t=>({id:'team:'+t.id,kind:'team',team:t,ms:nodes.filter(n=>n.team.id===t.id),x:t.c[0],y:t.c[1],r:110}));
+  ALL_NODES=PEOPLE.map((p,i)=>{const t=T[p.team],a=i*2.4;return{id:p.id,kind:'person',p,team:t,r:18,x:t.c[0]+Math.cos(a)*40,y:t.c[1]+Math.sin(a)*40}});
+  ALL_TNODES=TEAMS.map(t=>({id:'team:'+t.id,kind:'team',team:t,ms:ALL_NODES.filter(n=>n.team.id===t.id),x:t.c[0],y:t.c[1],r:110}));
+  layoutTeams();nodes=ALL_NODES.filter(n=>GR.teams.has(n.team.id));tnodes=ALL_TNODES.filter(t=>GR.teams.has(t.team.id));
   sim=d3.forceSimulation(nodes)
     .force('link',d3.forceLink().id(d=>d.id).distance(l=>l.same?62:230).strength(l=>l.same?.5:.012))
     .force('charge',d3.forceManyBody().strength(-190))
@@ -1238,10 +1270,83 @@ function initGraph(){
   rebuild(true);GR.ready=true;renderCrumb();
   new ResizeObserver(()=>{if(!$('#page-graph').hidden&&GR.fitted){computeFitK();applyLod()}}).observe($('#gbody'));
 }
+/* the grid follows pan/zoom; lines stay 1px, the fine grid fades out when zoomed far out */
+function updateGrid(t){
+  ['#gridMinor','#gridMajor'].forEach(id=>{const pt=gsvg.select(id);pt.attr('patternTransform',`translate(${t.x},${t.y}) scale(${t.k})`);pt.select('path').attr('stroke-width',1/t.k)});
+  gsvg.select('.grid-minor').style('opacity',Math.max(0,Math.min(1,(t.k-.25)/.45)));
+}
+/* ---- team filter: pick which teams are on the graph; fewer teams = tighter layout = bigger on screen ---- */
+GR.teams=new Set(TEAMS.map(t=>t.id));
+try{const saved=JSON.parse(localStorage.getItem('musketeer.teams')||'null');
+  if(Array.isArray(saved)){const ok=saved.filter(id=>T[id]);if(ok.length)GR.teams=new Set(ok)}}catch(e){}
+function layoutTeams(){
+  const ids=TEAMS.map(t=>t.id).filter(id=>GR.teams.has(id)),n=ids.length;
+  const rx=n<=1?0:180+340*(n-1)/7,ry=rx*.58,a0=n===2?Math.PI:-Math.PI/2;
+  ids.forEach((id,i)=>{const a=a0+i*2*Math.PI/n;T[id].c=[640+rx*Math.cos(a),400+ry*Math.sin(a)]});
+}
+function applyTeamFilter(){
+  try{localStorage.setItem('musketeer.teams',JSON.stringify([...GR.teams]))}catch(e){}
+  renderTeamFilter();
+  if(!GR.ready)return;
+  layoutTeams();
+  nodes=ALL_NODES.filter(n=>GR.teams.has(n.team.id));
+  tnodes=ALL_TNODES.filter(t=>GR.teams.has(t.team.id));
+  nodes.forEach((n,i)=>{const a=i*2.4;n.x=n.team.c[0]+Math.cos(a)*40;n.y=n.team.c[1]+Math.sin(a)*40;n.vx=n.vy=0});
+  if(GR.selected&&!GR.teams.has(P[GR.selected].team))closePanel();
+  sim.nodes(nodes);sim.force('x').x(d=>d.team.c[0]);sim.force('y').y(d=>d.team.c[1]);
+  rebuild(true);
+  if(GR.scope.team&&!GR.teams.has(GR.scope.team))GR.scope={dept:null,team:null};
+  renderCrumb();
+  if(!$('#page-graph').hidden)requestAnimationFrame(()=>{computeFitK();fitTo(nodes,650);GR.fitted=true});else GR.fitted=false;
+}
+/* turn a hidden team back on; returns true if it had to */
+function showTeam(tid){if(!tid||GR.teams.has(tid))return false;GR.teams.add(tid);applyTeamFilter();return true}
+function renderTeamFilter(){
+  const all=TEAMS.length,on=GR.teams.size;
+  $('#tfCnt').textContent=on===all?'All':`${on} of ${all}`;
+  const orgs=[...new Set(TEAMS.map(t=>t.dept))];
+  $('#tfilter').innerHTML=`<div class="tf-head"><b>Show teams</b><span><button data-act="all">All</button></span></div>`+
+    orgs.map(o=>{const ts=TEAMS.filter(t=>t.dept===o),n=ts.filter(t=>GR.teams.has(t.id)).length;
+      return `<div class="tf-org"><label><input type="checkbox" data-org="${esc(o)}" ${n===ts.length?'checked':''}><span class="tf-orgname">${esc(o)}</span><small>${ts.length} team${ts.length>1?'s':''}</small></label>`+
+        ts.map(t=>`<label class="tf-team"><input type="checkbox" data-team="${t.id}" ${GR.teams.has(t.id)?'checked':''}><span>${esc(t.name)}</span><button class="only" data-only="${t.id}" title="Show only this team">only</button><small>${PEOPLE.filter(p=>p.team===t.id).length}</small></label>`).join('')+`</div>`}).join('');
+  orgs.forEach(o=>{const ts=TEAMS.filter(t=>t.dept===o),n=ts.filter(t=>GR.teams.has(t.id)).length;
+    const box=[...$$('#tfilter [data-org]')].find(b=>b.dataset.org===o);if(box)box.indeterminate=n>0&&n<ts.length});
+}
+function setTeams(ids){
+  if(!ids.length){toast('Keep at least one team on the graph');renderTeamFilter();return}
+  GR.teams=new Set(ids);applyTeamFilter();
+}
+(function teamFilterUi(){
+  $('#gbody').insertAdjacentHTML('beforeend',`<button class="pill tf-btn" id="tfBtn" aria-haspopup="true" aria-expanded="false">${ic('users','i sm')}Teams<span class="cnt" id="tfCnt"></span>${ic('chevD','i sm')}</button>`);
+  const box=document.createElement('div');box.className='tfilter';box.id='tfilter';box.hidden=true;$('#gbody').appendChild(box);
+  const btn=$('#tfBtn');
+  btn.addEventListener('click',e=>{e.stopPropagation();box.hidden=!box.hidden;btn.setAttribute('aria-expanded',!box.hidden)});
+  // pointerdown (capture) so clicks on graph nodes, which stop propagation, still close the panel
+  document.addEventListener('pointerdown',e=>{const path=e.composedPath();
+    if(!box.hidden&&!path.includes(box)&&!path.includes(btn)){box.hidden=true;btn.setAttribute('aria-expanded','false')}},true);
+  box.addEventListener('click',e=>{
+    const only=e.target.closest('[data-only]');if(only){e.preventDefault();setTeams([only.dataset.only]);return}
+    if(e.target.closest('[data-act=all]'))setTeams(TEAMS.map(t=>t.id));
+  });
+  box.addEventListener('change',e=>{
+    const t=e.target;const ids=new Set(GR.teams);
+    if(t.dataset.team){t.checked?ids.add(t.dataset.team):ids.delete(t.dataset.team)}
+    if(t.dataset.org){TEAMS.filter(x=>x.dept===t.dataset.org).forEach(x=>t.checked?ids.add(x.id):ids.delete(x.id))}
+    setTeams([...ids]);
+  });
+  renderTeamFilter();
+})();
 function buildLinks(){
   links=[];const agg=new Map();
-  EDGES.forEach(e=>{
-    if(!GR.show[e.type])return;if(e.type==='similar'&&e.sim<GR.th)return;
+  /* candidates: connection types switched on, between teams on screen */
+  const cands=EDGES.filter(e=>GR.show[e.type]&&GR.teams.has(P[e.s].team)&&GR.teams.has(P[e.t].team));
+  GR.candCount=cands.length;
+  if(GR.mode==='top'){if(GR.topN==null)GR.topN=Math.max(1,Math.round(cands.length/3));GR.topN=Math.max(1,Math.min(Math.max(1,cands.length),GR.topN))}
+  const chosen=GR.mode==='top'
+    ? cands.slice().sort((a,b)=>b.sim-a.sim||RANK[b.type]-RANK[a.type]).slice(0,GR.topN)   // the X strongest links
+    : cands.filter(e=>e.type!=='similar'||e.sim>=GR.th);                                   // everything above the cutoff
+  syncLinkControl();
+  chosen.forEach(e=>{
     const key=e.s<e.t?e.s+'|'+e.t:e.t+'|'+e.s,same=P[e.s].team===P[e.t].team;
     links.push({key,source:e.s,target:e.t,type:e.type,sim:e.sim,freq:e.freq||0,same,bend:bendFor(key,same)});
     if(same)return;
@@ -1408,8 +1513,9 @@ function renderCrumb(){
 }
 function focusOrg(){GR.scope={dept:null,team:null};renderCrumb();fitTo(nodes,650)}
 function focusDept(dept){GR.scope={dept,team:null};renderCrumb();fitTo(nodes.filter(n=>n.team.dept===dept),650)}
-function focusTeam(tid){GR.scope={dept:T[tid].dept,team:tid};renderCrumb();fitTo(nodes.filter(n=>n.team.id===tid),750,60,Math.max(GR.fitK*1.15,Math.min(2,scaleFor(nodes.filter(n=>n.team.id===tid),60).k)))}
+function focusTeam(tid){if(showTeam(tid))return setTimeout(()=>focusTeam(tid),60);GR.scope={dept:T[tid].dept,team:tid};renderCrumb();fitTo(nodes.filter(n=>n.team.id===tid),750,60,Math.max(GR.fitK*1.15,Math.min(2,scaleFor(nodes.filter(n=>n.team.id===tid),60).k)))}
 function selectPerson(pid,zoomIn){
+  if(showTeam(P[pid].team))return setTimeout(()=>selectPerson(pid,zoomIn),60);
   GR.selected=pid;updateNodeClasses();openPanel(pid);
   if(zoomIn||GR.mix<.5){const nb=new Set([pid]);links.forEach(l=>{if(l.source.id===pid)nb.add(l.target.id);if(l.target.id===pid)nb.add(l.source.id)});
     const ns=nodes.filter(n=>nb.has(n.id));setTimeout(()=>fitTo(ns,650,90,Math.max(GR.fitK*1.1,Math.min(2,scaleFor(ns,90).k))),40)}
@@ -1533,7 +1639,35 @@ function playFresh(){
 /* graph controls */
 $$('.fchip[data-f]').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.f;GR.show[f]=!GR.show[f];b.classList.toggle('off',!GR.show[f]);b.setAttribute('aria-pressed',GR.show[f]);rebuild(false)}));
 function syncRange(el){el.style.setProperty('--p',((el.value-el.min)/(el.max-el.min)*100)+'%')}
-$('#simRange').addEventListener('input',e=>{GR.th=e.target.value/100;$('#simOut').textContent=e.target.value+'%';syncRange(e.target);rebuild(false)});
+/* link control: a similarity cutoff, or the top X links on screen (X's range and step follow how many links exist) */
+GR.mode='sim';GR.topN=null;GR.candCount=0;
+function niceStep(max){const raw=Math.max(1,max/12),p=10**Math.floor(Math.log10(raw)),m=raw/p;return Math.max(1,Math.round((m<1.5?1:m<3.5?2:m<7.5?5:10)*p))}
+function syncLinkControl(){
+  const r=$('#simRange'),n=$('#simNum');
+  if(GR.mode==='sim'){
+    Object.assign(r,{min:40,max:95,step:1});r.value=Math.round(GR.th*100);
+    Object.assign(n,{min:40,max:95,step:1});if(document.activeElement!==n)n.value=Math.round(GR.th*100);
+    $('#simMode').textContent='Similarity';$('#simUnit').textContent='%';
+  }else{
+    const max=Math.max(1,GR.candCount),step=niceStep(max);
+    // slider stops on round numbers (step, 2*step, ...); its right end means "all"; typing allows any exact value
+    Object.assign(r,{min:step,max:Math.ceil(max/step)*step,step});r.value=GR.topN>=max?r.max:GR.topN;
+    Object.assign(n,{min:1,max,step:1});if(document.activeElement!==n)n.value=GR.topN;
+    $('#simMode').textContent='Strongest';$('#simUnit').textContent=`of ${max} links`;
+  }
+  r.setAttribute('aria-label',GR.mode==='sim'?'Similarity cutoff':'Number of connections shown');
+  syncRange(r);
+}
+function setLinkValue(v){
+  if(GR.mode==='sim')GR.th=Math.max(.4,Math.min(.95,v/100));
+  else GR.topN=Math.max(1,Math.min(Math.max(1,GR.candCount),Math.round(v)));
+  rebuild(false);
+}
+$('#simRange').addEventListener('input',e=>setLinkValue(+e.target.value));
+$('#simNum').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(Number.isFinite(v))setLinkValue(v);else syncLinkControl()});
+$('#simNum').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur()}});
+$('#simMode').addEventListener('click',()=>{GR.mode=GR.mode==='sim'?'top':'sim';rebuild(false);
+  toast(GR.mode==='top'?'Showing only the strongest links. Drag or type how many.':'Showing links above a similarity cutoff.')});
 syncRange($('#simRange'));
 $$('#viewSeg button').forEach(b=>b.addEventListener('click',()=>b.dataset.v==='teams'?showTeams():focusOrg()));
 $('#zIn').addEventListener('click',()=>gsvg.transition().duration(300).call(zoom.scaleBy,1.35));
