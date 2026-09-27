@@ -287,6 +287,9 @@ async def record_feedback(conn_id: int, person_id: str, helpful: bool) -> None:
     if row:
         await execute("""INSERT INTO connection_events (connection_id, event, person_id, value)
                          VALUES (%s, 'feedback', %s, %s)""", (conn_id, person_id, helpful))
+        from app.expertise import feedback
+        await feedback.record_rating(conn_id, person_id, helpful)
+        await feedback.apply(conn_id)   # no-op until the requester has rated
 
 
 async def propose_meeting(conn_id: int, skip: int = 0, follow_up_of: int | None = None) -> None:

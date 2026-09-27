@@ -1,0 +1,81 @@
+[
+ {
+  "repo": "platform",
+  "number": 901,
+  "title": "Fix consumer lag in kafka-client poll loop",
+  "body": "Consumer lag spiked on the build-events topic. Poll loop was blocking on slow handlers; moved handling off the poll thread and capped max.poll.records so lag drains.",
+  "author": "p_021",
+  "created_at": "2026-08-01T17:17:15+00:00",
+  "merged_at": "2026-08-02T17:17:15+00:00",
+  "files": [
+   "shared/kafka-client/src/poller.py",
+   "shared/kafka-client/src/consumer.py"
+  ],
+  "commits": [
+   {
+    "message": "fix(consumer): move handlers off the poll thread"
+   },
+   {
+    "message": "fix(consumer): cap max.poll.records"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 902,
+  "title": "Add conversion chart to growth funnels",
+  "body": "First charting work: a stacked conversion chart for the growth funnel dashboard, with accessible labels and a data table fallback.",
+  "author": "p_040",
+  "created_at": "2026-09-16T11:17:15+00:00",
+  "merged_at": "2026-09-16T17:17:15+00:00",
+  "files": [
+   "web/growth/funnels/ConversionChart.tsx",
+   "web/growth/funnels/chartTheme.ts"
+  ],
+  "commits": [
+   {
+    "message": "feat(funnels): stacked conversion chart"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 903,
+  "title": "Dashboard chart tooltips and legends",
+  "body": "Adds hover tooltips, legends, and responsive sizing to the funnel dashboard charts.",
+  "author": "p_040",
+  "created_at": "2026-09-18T11:17:15+00:00",
+  "merged_at": "2026-09-18T17:17:15+00:00",
+  "files": [
+   "web/growth/funnels/ChartTooltip.tsx",
+   "web/growth/funnels/ChartLegend.tsx"
+  ],
+  "commits": [
+   {
+    "message": "feat(funnels): chart tooltips and legends"
+   }
+  ],
+  "reviews": []
+ },
+ {
+  "repo": "web",
+  "number": 904,
+  "title": "Fix funnel dashboard chart rendering for empty data",
+  "body": "Funnel dashboard charts crashed on empty segments; render an empty state and keep axes stable.",
+  "author": "p_040",
+  "created_at": "2026-09-20T11:17:15+00:00",
+  "merged_at": "2026-09-20T17:17:15+00:00",
+  "files": [
+   "web/growth/funnels/ConversionChart.tsx",
+   "web/growth/funnels/EmptyChart.tsx"
+  ],
+  "commits": [
+   {
+    "message": "fix(funnels): empty-state chart rendering"
+   }
+  ],
+  "reviews": []
+ }
+]

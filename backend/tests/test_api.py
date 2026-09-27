@@ -123,13 +123,16 @@ async def test_errors_are_json(client, seeded):
 
 async def test_search(client, seeded, fake_muse):
     target = seeded["planted"]["rate_limit"][0]
-    fake_muse.handler = lambda prompt, schema: {"results": [
-        {"person_id": target, "score": 93, "reason": "Built request throttling."},
-        {"person_id": "p_999", "score": 90, "reason": "hallucinated"}]}
+    fake_muse.handler = lambda prompt, schema: (
+        {"required_skills": [{"label": "rate limiting", "weight": 1.0}]} if schema.__name__ == "RequiredSkillsOut"
+        else {"results": [{"person_id": target, "score": 93, "reason": "Built request throttling."},
+                          {"person_id": "p_999", "score": 90, "reason": "hallucinated"}]})
     r = (await client.get("/api/search", params={"q": "who has built rate limiting?"})).json()
-    assert r["results"] == [{"person_id": target, "name": f"Person {target}", "team_id": "t_ads",
-                             "team_name": "Ads Ranking", "org_id": "org_eng", "score": 0.93,
-                             "reason": "Built request throttling."}]
+    [hit] = r["results"]
+    assert {k: v for k, v in hit.items() if k != "score"} == {
+        "person_id": target, "name": f"Person {target}", "team_id": "t_ads", "team_name": "Ads Ranking",
+        "org_id": "org_eng", "reason": "Built request throttling."}
+    assert hit["score"] > 0.6 * 0.93   # Muse judgment + recent rate-limiting evidence (§9.3 blend)
     assert "who has built rate limiting?" in fake_muse.calls[0][1][-1]["content"]
 
 
@@ -149,5 +152,6 @@ async def test_synopsis(client, seeded, fake_muse):
     assert sum(t["suggested"] for t in s["trend"]) == expect["suggested"]
     assert sum(t["accepted"] for t in s["trend"]) == expect["accepted_trend"]
     assert [(t["team_a"], t["team_b"]) for t in s["teams_should_talk"]] == [("t_events", "t_uni")]
-    planted = {tuple(sorted(p)) for k, p in seeded["planted"].items()}
+    # amber_case is the deliberately faint match (no shared recent work), so it is not "missed".
+    planted = {tuple(sorted(p)) for k, p in seeded["planted"].items() if k != "amber_case"}
     assert planted <= {(m["a"], m["b"]) for m in s["missed_opportunities"]}

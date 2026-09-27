@@ -6,6 +6,7 @@ Fixture files (written by seed_generate.py):
   roster.json   {generated_at, orgs, teams, people, planted: {overlap_id: [pid, pid]},
                  amber_task: {person_id, summary, task_type, source}, demo: {viewer_id, email_recipient_id}}
   github.json   [GitHub-shaped PR, spec §6.1]
+  github_temporal.json  optional, same shape: hand-written planted_temporal PRs (stale expert, emerging skill)
   activity.json [NormalizedEvent dict]  (non-GitHub 'did' events: Slack posts, sent emails)
 All fixture timestamps are shifted by (now - generated_at) so history always ends today.
 """
@@ -58,8 +59,10 @@ async def load_slack_map(roster: dict) -> int:
 
 async def load_events(fixtures: Path, shift: timedelta) -> int:
     events: list[NormalizedEvent] = []
-    for pr in json.loads((fixtures / "github.json").read_text(encoding="utf-8")):
-        events += GitHubConnector().normalize(pr)
+    for name in ("github.json", "github_temporal.json"):   # github_temporal: hand-written planted_temporal PRs
+        path = fixtures / name
+        for pr in json.loads(path.read_text(encoding="utf-8")) if path.exists() else []:
+            events += GitHubConnector().normalize(pr)
     events += [NormalizedEvent(**e) for e in json.loads((fixtures / "activity.json").read_text(encoding="utf-8"))]
     for ev in events:
         ev.time += shift

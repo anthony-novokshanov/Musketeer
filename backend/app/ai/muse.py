@@ -15,6 +15,7 @@ log = logging.getLogger("musketeer.muse")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 MAX_RETRIES = 2
+REQUEST_TIMEOUT_SEC = 90   # the SDK default (600 s x 3 attempts) can stall a pipeline or a live suggestion
 _semaphore = asyncio.Semaphore(4)
 _client: AsyncOpenAI | None = None
 
@@ -34,7 +35,8 @@ def render(prompt_name: str, variables: dict) -> str:
 async def _complete(messages: list[dict], schema: type[BaseModel]) -> str:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(base_url="https://api.meta.ai/v1", api_key=settings.MODEL_API_KEY)
+        _client = AsyncOpenAI(base_url="https://api.meta.ai/v1", api_key=settings.MODEL_API_KEY,
+                              timeout=REQUEST_TIMEOUT_SEC)
     # Verified against the live API: standard json_schema structured output works; reasoning_effort
     # accepts minimal|low|medium|high|xhigh|max ("none" is rejected); prompt caching is automatic.
     resp = await _client.chat.completions.create(

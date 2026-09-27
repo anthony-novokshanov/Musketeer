@@ -14,6 +14,7 @@ from app.api import actions, bridges, dev, graph, pairs, people, search, setting
 from app.bot import flows, jobs
 from app.config import settings
 from app.db import fetch_one, pool
+from app.pipeline import similarity
 
 logging.basicConfig(level=logging.INFO)
 
@@ -24,7 +25,8 @@ async def lifespan(app: FastAPI):
     if settings.ENABLE_SLACK:
         from app.bot import slack_bot
         await slack_bot.start()
-    loops = [asyncio.create_task(jobs.feedback_loop())]
+    loops = [asyncio.create_task(jobs.feedback_loop()),
+             asyncio.create_task(similarity.refresh_loop(settings.EXPERTISE_REFRESH_MIN))]
     if settings.ENABLE_GMAIL:
         from app.connectors import gmail
         loops.append(asyncio.create_task(gmail.poll_loop()))

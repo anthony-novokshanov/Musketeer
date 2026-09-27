@@ -76,6 +76,8 @@ def fake_muse_handler(roster: dict):
     partner = {}
     for a, b in roster["planted"].values():
         partner[a], partner[b] = b, a
+    planted_label = {pid: label for key, label in (("recruiting_mlh", "hackathon booths"), ("rate_limit", "rate limiting"))
+                     for pid in roster["planted"][key]}
     team_of = {p["id"]: p["team_id"] for p in roster["people"]}
 
     def handler(prompt: str, schema) -> dict:
@@ -96,6 +98,35 @@ def fake_muse_handler(roster: dict):
                                "summary": "Both use Kafka."}]}
         if name == "LeadBriefOut":
             return {"brief": "**Brief**"}
+        if name == "ExtractExpertiseOut":
+            # Planted kafka people describe the same problem in different words; P13 must merge them.
+            if "kafka-client" in prompt:
+                label = "notifications backlog" if "Messaging Infra" in prompt else "consumer lag"
+                return {"items": [{"label": label, "evidence_kind": "solved", "confidence": 0.9,
+                                   "snippet": "fixed a queue backlog"},
+                                  {"label": "wild guess", "evidence_kind": "discussed", "confidence": 0.3,
+                                   "snippet": "below MIN_EVIDENCE_CONFIDENCE"}]}
+            if "Work item (pr)" in prompt or "Work item (review)" in prompt:
+                kind = "reviewed" if "(review)" in prompt else "built"
+                return {"items": [{"label": "Service Maintenance", "evidence_kind": kind, "confidence": 0.8,
+                                   "snippet": "kept a service healthy"}]}
+            who = re.search(r"Person: Person (p_\d+)", prompt)
+            if who and who.group(1) in planted_label and "Work item (slack_message)" in prompt:
+                return {"items": [{"label": planted_label[who.group(1)], "evidence_kind": "organized",
+                                   "confidence": 0.9, "snippet": "did the planted work"}]}
+            return {"items": []}   # other slack status updates: no evidence
+        if name == "CanonicalizeSkillsOut":
+            return {"skills": [
+                {"name": "Kafka Consumer Lag", "kind": "problem", "description": "Queues falling behind.",
+                 "raw_labels": ["consumer lag", "notifications backlog"], "related": ["service maintenance"]},
+                {"name": "service maintenance", "kind": "practice", "description": "Keeping services healthy.",
+                 "raw_labels": ["service maintenance"], "related": ["not a skill"]},
+                {"name": "hackathon booths", "kind": "domain", "description": "Running hackathon booths.",
+                 "raw_labels": ["hackathon booths"], "related": []},
+                {"name": "rate limiting", "kind": "problem", "description": "Throttling requests.",
+                 "raw_labels": ["rate limiting"], "related": []}]}
+        if name == "RequiredSkillsOut":   # the amber task
+            return {"required_skills": [{"label": "service maintenance", "weight": 1.0}]}
         raise AssertionError(f"unexpected prompt schema {name}")
 
     return handler

@@ -6,7 +6,7 @@ from app.ai.muse import PROMPTS_DIR, MuseError, muse_json, render
 from app.schemas import DetectTaskOut
 
 DETECT = {"title": "MLH booth", "text": "Can you run our booth?", "recipient_name": "Jordan Lee",
-          "recipient_title": "Recruiter", "recipient_team": "Events"}
+          "recipient_title": "Recruiter", "recipient_team": "Events", "skills": "hackathon booth logistics"}
 GOOD = {"is_new_task": True, "confidence": 0.9, "summary": "Run the MLH booth", "task_type": "event"}
 
 
@@ -16,7 +16,8 @@ def test_every_prompt_renders_and_ranking_prompts_carry_rubric():
         text = render(path.stem, {n: "X" for n in names})
         assert "{{" not in text
     for name in ("rank_for_person", "rank_for_task", "search"):
-        assert "Below 50: omit." in (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8")
+        text = (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8")
+        assert "Below 50: omit." in text and "Recent, repeated work counts more" in text
 
 
 def test_render_missing_variable_raises():

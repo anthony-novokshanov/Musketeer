@@ -14,8 +14,9 @@ async def pair(a: str, b: str):
     if not side_a or not side_b:
         raise HTTPException(404, "person not found")
     lo, hi = sorted((a, b))
-    sim = await fetch_one("""SELECT semantic_score, dir_overlap, score, reason, shared_dirs
-                             FROM similarities WHERE person_a = %s AND person_b = %s""", (lo, hi)) or {}
+    sim = await fetch_one("""SELECT semantic_score, temporal_score, dir_overlap, score, reason, shared_dirs,
+                                    ARRAY(SELECT name FROM skills k JOIN unnest(s.shared_skills) WITH ORDINALITY u(id, i) ON k.id = u.id ORDER BY u.i) AS shared_skills
+                             FROM similarities s WHERE person_a = %s AND person_b = %s""", (lo, hi)) or {}
 
     connections = await fetch_all("""
         SELECT c.id, c.status, c.origin, t.summary AS task_summary, c.created_at, c.accepted_at,
@@ -32,5 +33,6 @@ async def pair(a: str, b: str):
         ORDER BY c.created_at DESC""", (lo, hi))
 
     return {"a": side_a, "b": side_b, "semantic_score": sim.get("semantic_score"),
+            "temporal_score": sim.get("temporal_score"), "shared_skills": sim.get("shared_skills", []),
             "dir_overlap": sim.get("dir_overlap"), "score": sim.get("score"), "reason": sim.get("reason"),
             "shared_dirs": sim.get("shared_dirs", []), "connections": connections}
