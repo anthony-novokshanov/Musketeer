@@ -1,4 +1,5 @@
 """Bolt app over Socket Mode (spec §10): buttons, group-DM message counting, channel ingest."""
+import json
 import logging
 import re
 
@@ -38,13 +39,22 @@ async def on_message(event):
 
 
 @app.action(re.compile(r"^musketeer_"))
-async def on_button(ack, body, action, respond, say):
+async def on_button(ack, body, action, respond, say, client):
     await ack()
     action_id, *parts = [action["action_id"], *action["value"].split("|")]
     conn_id = int(parts[0])
     original = body["message"]["text"]
 
-    if action_id in _ACTIONS:
+    if action_id == messages.CONNECT:
+        # Don't notify the helper yet: the requester first says what they need (and can attach docs).
+        draft = await flows.request_draft(conn_id)
+        if not draft:
+            await respond(replace_original=True, text=f"{original}\n_This suggestion is no longer open._")
+            return
+        helper_first, text = draft
+        meta = json.dumps({"conn": conn_id, "channel": body["channel"]["id"], "ts": body["message"]["ts"], "original": original})
+        await client.views_open(trigger_id=body["trigger_id"], view=messages.request_form(meta, helper_first, text))
+    elif action_id in _ACTIONS:
         label, step = _ACTIONS[action_id]
         await respond(replace_original=True, text=f"{original}\n_{label}_")
         await step(conn_id)
@@ -67,6 +77,20 @@ async def on_button(ack, body, action, respond, say):
         if person:
             await flows.record_feedback(conn_id, person["id"], action_id == messages.HELPFUL_YES)
         await respond(replace_original=True, text=f"{original}\n_Thanks for the feedback!_")
+
+
+@app.view(messages.REQUEST_FORM)
+async def on_request_form(ack, view, client):
+    note, links, errors = messages.parse_request_form(view["state"]["values"])
+    if errors:
+        await ack(response_action="errors", errors=errors)
+        return
+    await ack()
+    meta = json.loads(view["private_metadata"])
+    await client.chat_update(channel=meta["channel"], ts=meta["ts"], text=f"{meta['original']}\n_Request sent. I'll let you know when they answer._",
+                             blocks=[{"type": "section", "text": {"type": "mrkdwn",
+                                      "text": f"{meta['original']}\n_Request sent. I'll let you know when they answer._"}}])
+    await flows.requester_accepts(meta["conn"], note, links)
 
 
 async def start() -> None:

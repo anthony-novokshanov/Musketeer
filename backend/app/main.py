@@ -7,9 +7,10 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import actions, bridges, dev, graph, pairs, people, search, synopsis
+from app.api import actions, bridges, dev, graph, pairs, people, search, settings_api, synopsis
 from app.bot import flows, jobs
 from app.config import settings
 from app.db import fetch_one, pool
@@ -43,7 +44,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-for module in (graph, people, pairs, bridges, search, synopsis, actions):
+for module in (graph, people, pairs, bridges, search, synopsis, actions, settings_api):
     app.include_router(module.router, prefix="/api")
 if settings.ENABLE_DEV_ROUTES:
     app.include_router(dev.router, prefix="/api")
@@ -61,6 +62,9 @@ async def validation_error(request: Request, exc: RequestValidationError):
 
 
 FRONTEND = Path(__file__).resolve().parents[2] / "musketeerfront.html"
+AVATARS = Path(__file__).resolve().parents[1] / "static" / "avatars"
+AVATARS.mkdir(parents=True, exist_ok=True)
+app.mount("/avatars", StaticFiles(directory=AVATARS), name="avatars")  # headshots: python -m scripts.fetch_avatars
 
 
 @app.get("/", include_in_schema=False)

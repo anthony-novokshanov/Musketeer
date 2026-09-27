@@ -36,3 +36,7 @@ def test_adjust_task_candidate():
     assert adjust_task_candidate(0.7, interacted_before=False, helper_requests_last_7_days=0) == pytest.approx(0.8)
     assert adjust_task_candidate(0.7, interacted_before=True, helper_requests_last_7_days=1) == pytest.approx(0.65)
     assert adjust_task_candidate(0.7, interacted_before=True, helper_requests_last_7_days=10) == pytest.approx(0.55)
+
+
+def test_prefer_new_off_removes_bonus():
+    assert adjust_task_candidate(0.7, interacted_before=False, helper_requests_last_7_days=0, prefer_new=False) == pytest.approx(0.7)

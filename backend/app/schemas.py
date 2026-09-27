@@ -23,6 +23,7 @@ class DetectTaskOut(BaseModel):                     # P1
     confidence: float
     summary: str
     task_type: Literal["event", "project", "bug", "review", "request", "other"]
+    team_level: bool = False                       # the work belongs to a whole team, not one person
 
 
 class ProfileOut(BaseModel):                        # P2, P3
@@ -190,6 +191,16 @@ class TimelineEvent(BaseModel):
     person_id: str | None
 
 
+class MeetingInfo(BaseModel):
+    id: int
+    start_at: datetime
+    canvas_url: str | None
+    event_link: str | None
+    meet_link: str | None
+    deliverable: str | None
+    is_follow_up: bool
+
+
 class PairConnection(BaseModel):
     id: int
     status: str
@@ -201,6 +212,9 @@ class PairConnection(BaseModel):
     helpful_requester: bool | None
     helpful_helper: bool | None
     timeline: list[TimelineEvent]
+    meetings: list[MeetingInfo] = []
+    request_note: str | None = None
+    request_links: list[str] = []
 
 
 class PairOut(BaseModel):

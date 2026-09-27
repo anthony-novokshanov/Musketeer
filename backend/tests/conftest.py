@@ -23,7 +23,14 @@ os.environ["ENABLE_GMAIL"] = "false"
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from app.config import settings  # noqa: E402
 from app.db import apply_schema, pool  # noqa: E402
+
+# Never touch the real tables: if `app` was configured before this file could point it at the test schema
+# (e.g. an IDE runner that imported it early), stop before any test runs.
+if f"search_path%3D{TEST_SCHEMA}" not in settings.DATABASE_URL:
+    pytest.exit(f"tests must use the `{TEST_SCHEMA}` schema; app.config loaded the real database first. "
+                "Run pytest from backend/ (python -m pytest).", returncode=3)
 
 
 def _recreate_schema(drop_only: bool = False) -> None:
@@ -92,6 +99,10 @@ async def seeded(tmp_path_factory):
 @pytest.fixture(scope="session", autouse=True)
 async def test_db():
     _recreate_schema()
+    async with await psycopg.AsyncConnection.connect(settings.DATABASE_URL) as conn:
+        schema = (await (await conn.execute("SELECT current_schema()")).fetchone())[0]
+    if schema != TEST_SCHEMA:
+        pytest.exit(f"test connection resolved to schema {schema!r}, not {TEST_SCHEMA!r}; refusing to run", returncode=3)
     await apply_schema()
     await pool.open()
     yield

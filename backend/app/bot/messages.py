@@ -36,12 +36,60 @@ def suggestion(conn_id: int, task_summary: str, helper_name: str, helper_team: s
 
 
 def request(conn_id: int, requester_name: str, requester_team: str, task_summary: str, reason: str,
-            reason_is_about_helper: bool = False) -> dict:
+            reason_is_about_helper: bool = False, note: str | None = None, links: list[str] | None = None) -> dict:
     # Task-match reasons are verb-first about the helper ("Ran MLH booths..."), so they read "because you ran...".
     because = f"you {_clause(reason)}" if reason_is_about_helper else _clause(reason)
-    return _msg(f"{requester_name} ({requester_team}) is working on *{task_summary}*. "
-                f"You were suggested because {because}. Up for a quick chat?",
-                conn_id, (SURE, "Sure"), (CANT, "Can't right now"))
+    attached = ("\n*Attached:* " + " · ".join(f"<{u}>" for u in links)) if links else ""
+    if not note:  # the standard intro (plus any links)
+        return _msg(f"{requester_name} ({requester_team}) is working on *{task_summary}*. "
+                    f"You were suggested because {because}. Up for a quick chat?{attached}",
+                    conn_id, (SURE, "Sure"), (CANT, "Can't right now"))
+    quoted = "\n".join(f"> {line}" for line in note.strip().splitlines())
+    text = (f"{requester_name} ({requester_team}) would like your help with *{task_summary}*:\n{quoted}"
+            + attached + f"\n_You were suggested because {because}._ Up for a quick chat?")
+    return _msg(text, conn_id, (SURE, "Sure"), (CANT, "Can't right now"))
+
+
+REQUEST_FORM = "musketeer_request_submit"
+
+
+def request_draft(helper_first: str, topic: str) -> str:
+    """Example shown as greyed-out placeholder text in the optional message box."""
+    return f"e.g. Hi {helper_first}, I'm working on {topic}. Could I ask how you handled it?"[:150]
+
+
+def request_form(metadata: str, helper_first: str, draft: str) -> dict:
+    """Connect opens this instead of messaging the helper right away. Everything in it is optional:
+    left empty, the helper gets the standard intro."""
+    return {"type": "modal", "callback_id": REQUEST_FORM, "private_metadata": metadata,
+            "title": {"type": "plain_text", "text": f"Write to {helper_first}"[:24]},
+            "submit": {"type": "plain_text", "text": "Send request"},
+            "close": {"type": "plain_text", "text": "Not yet"},
+            "blocks": [
+                {"type": "context", "elements": [{"type": "mrkdwn", "text":
+                    f"{helper_first} only hears from Musketeer once you send this. "
+                    "Add a note or docs if you like, or leave both empty to send the standard intro."}]},
+                {"type": "input", "block_id": "note", "optional": True,
+                 "label": {"type": "plain_text", "text": "Add a message (optional)"},
+                 "element": {"type": "plain_text_input", "action_id": "v", "multiline": True, "max_length": 1500,
+                             "placeholder": {"type": "plain_text", "text": draft}}},
+                {"type": "input", "block_id": "links", "optional": True,
+                 "label": {"type": "plain_text", "text": "Links to docs (optional, one per line)"},
+                 "hint": {"type": "plain_text", "text": "Share files in Slack or Drive first, then paste their links."},
+                 "element": {"type": "plain_text_input", "action_id": "v", "multiline": True,
+                             "placeholder": {"type": "plain_text", "text": "https://docs.google.com/..."}}}]}
+
+
+def parse_request_form(values: dict) -> tuple[str | None, list[str], dict]:
+    """Returns (note or None, links, errors). Everything is optional; only malformed links are rejected."""
+    note = (values.get("note", {}).get("v", {}).get("value") or "").strip() or None
+    raw = values.get("links", {}).get("v", {}).get("value") or ""
+    links = [x.strip() for x in raw.splitlines() if x.strip()]
+    errors = {}
+    bad = [x for x in links if not x.startswith(("http://", "https://"))]
+    if bad:
+        errors["links"] = f"Links should start with http:// or https:// ({bad[0][:40]})"
+    return note, links[:5], errors
 
 
 def nudge(conn_id: int, manager_name: str, target_name: str, target_team: str, reason: str) -> dict:
@@ -93,6 +141,12 @@ def meeting_booked(start, end, link: str) -> dict:
 
 
 NO_COMMON_TIME = {"text": "I couldn't find a time you're both free in the next week. Try picking one here in the chat."}
+
+
+def request_held(helper_first: str, free_at) -> dict:
+    t = f"{free_at.hour % 12 or 12}:{free_at.minute:02d} {free_at:%p}"
+    return {"text": f"{helper_first} is in a meeting until {t}, so I'm holding your request until they're free. "
+                    "I'll let you know when they answer."}
 
 
 def helper_cant(helper_first: str) -> dict:

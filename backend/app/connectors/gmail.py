@@ -11,7 +11,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
-from app import google
+from app import google, prefs
 from app.config import settings
 from app.db import fetch_one
 from app.schemas import NormalizedEvent
@@ -78,6 +78,9 @@ async def poll_loop() -> None:
     handled: set[str] = set()
     while True:
         try:
+            if not (await prefs.get()).sources.gmail:
+                await asyncio.sleep(settings.GMAIL_POLL_SEC)
+                continue
             for msg_id in await asyncio.to_thread(_list_read, svc):
                 if msg_id in handled:
                     continue

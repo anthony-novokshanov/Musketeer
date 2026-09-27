@@ -15,3 +15,5 @@ Return JSON:
 - confidence: 0-1, how sure you are.
 - summary: the task in <= 25 words, phrased as the work itself (e.g. "Run the company booth at the MLH hackathon next month").
 - task_type: one of event, project, bug, review, request, other.
+- team_level: true if the work clearly belongs to the recipient's whole team (a team program, a team
+  launch, work the team will staff together), false if it is this person's own task.

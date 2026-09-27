@@ -19,10 +19,14 @@ async def pair(a: str, b: str):
 
     connections = await fetch_all("""
         SELECT c.id, c.status, c.origin, t.summary AS task_summary, c.created_at, c.accepted_at,
-               c.message_count, c.helpful_requester, c.helpful_helper,
+               c.message_count, c.helpful_requester, c.helpful_helper, c.request_note, c.request_links,
                COALESCE((SELECT json_agg(json_build_object('time', e.time, 'event', e.event, 'person_id', e.person_id)
                                 ORDER BY e.time)
-                         FROM connection_events e WHERE e.connection_id = c.id AND e.event <> 'message'), '[]') AS timeline
+                         FROM connection_events e WHERE e.connection_id = c.id AND e.event <> 'message'), '[]') AS timeline,
+               COALESCE((SELECT json_agg(json_build_object('id', m.id, 'start_at', m.start_at, 'canvas_url', m.canvas_url,
+                                  'event_link', m.event_link, 'meet_link', m.meet_link, 'deliverable', m.deliverable,
+                                  'is_follow_up', m.parent_id IS NOT NULL) ORDER BY m.start_at)
+                         FROM meetings m WHERE m.connection_id = c.id), '[]') AS meetings
         FROM connections c LEFT JOIN tasks t ON t.id = c.task_id
         WHERE LEAST(c.requester_id, c.helper_id) = %s AND GREATEST(c.requester_id, c.helper_id) = %s
         ORDER BY c.created_at DESC""", (lo, hi))
