@@ -1,8 +1,9 @@
-The system message lists every employee in the company, one per line, with their id.
+The system message lists the employees to consider (the whole company, or a shortlist), one per
+line, with their id.
 
 A manager is searching for people: "{{query}}"
 
-Likely candidates from recent work on the searched skills (you may pick anyone in the roster):
+Likely candidates from recent work on the searched skills (you may pick anyone in the system message):
 {{candidates}}
 
 Find up to 5 people whose work best answers this search.

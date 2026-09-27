@@ -29,6 +29,7 @@ def _to_matches(scored: list[ScoredPerson], valid_ids: set[str], exclude: str | 
 
 
 def _ids(roster: str) -> set[str]:
+    """Person ids at the start of lines ("[p_001] ...") in a roster or a candidate listing."""
     return set(re.findall(r"^\[(\w+)\]", roster, flags=re.MULTILINE))
 
 
@@ -50,14 +51,31 @@ def _candidate_lines(ranked: list[tuple[str, float]], names: dict[str, str], lab
 
 
 class MuseMatcher:
+    # Hooks HybridMatcher overrides (spec §8.6). Here: the whole roster, and no extra candidates.
+    async def _roster(self, shortlist: list[str]) -> str:
+        return await roster_block()
+
+    async def _extra_for_person(self, person_id: str, pool: list[str], space: SkillSpace) -> str:
+        return ""
+
+    async def _extra_for_task(self, task_id: int, task: dict, available: set[str], pool: list[tuple[str, float]],
+                              space: SkillSpace) -> list[tuple[str, float]]:
+        return []
+
+    async def _extra_for_query(self, query: str, pool: list[tuple[str, float]], space: SkillSpace,
+                               required: list[dict]) -> str:
+        return ""
+
     async def rank_for_person(self, person_id: str, space: SkillSpace | None = None,
                               dirs: dict[str, set[str]] | None = None) -> list[Match]:
         space = space or await vectors.load()
         dirs = dirs if dirs is not None else await engineer_dirs()
-        roster = await roster_block()
         pool = candidates.for_person(space, person_id, dirs)
         listing = _candidate_lines([(p, space.temporal_sim(person_id, p)) for p in pool], await _names(),
                                    "temporal similarity", space, person_id)
+        extra = await self._extra_for_person(person_id, pool, space)
+        listing += extra
+        roster = await self._roster([person_id, *pool, *_ids(extra)])
         out = await muse_json("rank_for_person", {"target_id": person_id, "topk": settings.TOPK_STORE,
                                                   "candidates": listing}, RankForPersonOut, prefix=roster)
         ids = _ids(roster)
@@ -75,6 +93,7 @@ class MuseMatcher:
             pool = [(p, r) for p, r in space.rank_for_skills(required) if p in available][:settings.CANDIDATE_POOL]
         else:   # no skills detected: let Muse judge everyone (demo scale)
             pool = [(p, 0.0) for p in sorted(available)]
+        pool += await self._extra_for_task(task_id, task, available, pool, space)
         if not pool:
             return []
         cards = await expertise_cards([p for p, _ in pool])
@@ -96,9 +115,10 @@ class MuseMatcher:
         required = await candidates.resolve_required(req.required_skills)
         space = await vectors.load()
         pool = candidates.for_skills(space, required)
-        roster = await roster_block()
+        extra = await self._extra_for_query(query, pool, space, required)
+        roster = await self._roster([p for p, _ in pool] + sorted(_ids(extra)))
         out = await muse_json("search", {"query": query,
-                                         "candidates": _candidate_lines(pool, await _names(), "relevance")},
+                                         "candidates": _candidate_lines(pool, await _names(), "relevance") + extra},
                               SearchOut, prefix=roster, cache=False)
         ids = _ids(roster)
         temporal = {p: space.task_relevance(p, required) for p in ids}

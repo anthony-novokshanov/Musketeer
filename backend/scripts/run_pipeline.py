@@ -27,8 +27,9 @@ async def run() -> None:
     await decay.recompute_all()
     await build_person_profiles()           # 5. profiles
     await build_team_profiles()
-    if settings.MATCHER_MODE == "hybrid":
-        raise NotImplementedError("hybrid embeddings are Phase 4")
+    if settings.MATCHER_MODE == "hybrid":   # Contriever vectors for retrieval (spec §8.6)
+        from app.pipeline.embeddings import embed_all
+        await embed_all()
     await build_similarities()
     await build_team_overlaps()
 

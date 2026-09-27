@@ -27,6 +27,9 @@ async def lifespan(app: FastAPI):
         await slack_bot.start()
     loops = [asyncio.create_task(jobs.feedback_loop()),
              asyncio.create_task(similarity.refresh_loop(settings.EXPERTISE_REFRESH_MIN))]
+    if settings.MATCHER_MODE == "hybrid":   # load Contriever now, not on the first live email (~30 s)
+        from app.ai import embedder
+        loops.append(asyncio.create_task(asyncio.to_thread(embedder.warm)))
     if settings.ENABLE_GMAIL:
         from app.connectors import gmail
         loops.append(asyncio.create_task(gmail.poll_loop()))

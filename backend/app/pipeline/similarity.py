@@ -7,6 +7,7 @@ within minutes.
 import asyncio
 import logging
 
+from app.config import settings
 from app.db import fetch_all, pool
 from app.expertise import decay, vectors
 from app.expertise.vectors import SkillSpace
@@ -75,5 +76,9 @@ async def refresh_loop(minutes: float) -> None:
         await asyncio.sleep(minutes * 60)
         try:
             await refresh_temporal()
+            if settings.MATCHER_MODE == "hybrid":   # new people and work items get vectors too
+                from app.pipeline.embeddings import embed_missing_events, embed_people
+                await embed_people(only_missing=True)
+                await embed_missing_events()
         except Exception:
             log.exception("temporal refresh failed")

@@ -19,6 +19,7 @@ _sep = "&" if "?" in _base_url else "?"
 os.environ["DATABASE_URL"] = f"{_base_url}{_sep}options={quote(f'-csearch_path={TEST_SCHEMA},public')}"
 os.environ["ENABLE_SLACK"] = "false"
 os.environ["ENABLE_GMAIL"] = "false"
+os.environ["MATCHER_MODE"] = "muse"   # hybrid is tested explicitly (test_hybrid.py) with a stand-in embedder
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())

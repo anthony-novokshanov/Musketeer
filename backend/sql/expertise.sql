@@ -79,3 +79,9 @@ ALTER TABLE tasks           ADD COLUMN IF NOT EXISTS required_skills JSONB NOT N
 ALTER TABLE similarities    ADD COLUMN IF NOT EXISTS temporal_score REAL NOT NULL DEFAULT 0;
 ALTER TABLE similarities    ADD COLUMN IF NOT EXISTS shared_skills TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE connections     ADD COLUMN IF NOT EXISTS feedback_applied BOOLEAN NOT NULL DEFAULT false;
+
+-- Hybrid mode (spec §8.6): Contriever vectors with StreamingDiskANN indexes (pgvectorscale), so
+-- nearest-neighbour retrieval stays fast from 40 people to a whole company. Harmless in muse mode.
+CREATE EXTENSION IF NOT EXISTS vectorscale;
+CREATE INDEX IF NOT EXISTS people_summary_embedding_diskann ON people USING diskann (summary_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS activity_events_embedding_diskann ON activity_events USING diskann (embedding vector_cosine_ops);

@@ -1,8 +1,9 @@
-The system message lists every employee in the company, one per line, with their id.
+The system message lists the employees to consider (the whole company, or a shortlist), one per
+line, with their id.
 
 Find the people whose work overlaps most with [{{target_id}}].
 
-Likely candidates from recent shared skills (you may pick anyone in the roster):
+Likely candidates from recent shared skills (you may pick anyone in the system message):
 {{candidates}}
 
 Score 0-100 how useful it would be for these two people to talk about their work.

@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     MUSE_MODEL: str = "muse-spark-1.3"
     MUSE_CACHE_DIR: str = ".cache/muse"
     MATCHER_MODE: str = "muse"
+    EMBED_MODEL: str = "facebook/contriever-msmarco"   # hybrid mode: Meta FAIR Contriever (spec §8.6)
+    EMBED_POOL: int = 10                        # hybrid: extra candidates found by meaning, beyond the temporal pool
+    EMBED_EVENT_NEIGHBORS: int = 200            # hybrid: nearest work items fetched before recency weighting
     TEMPORAL_MODEL: str = "decay"               # decay | learned (learned = stretch, §7.7)
 
     # Temporal expertise graph (§7)
