@@ -41,6 +41,16 @@ async def on_message(event):
 @app.action(re.compile(r"^musketeer_"))
 async def on_button(ack, body, action, respond, say, client):
     await ack()
+    log.info("button %s value=%s user=%s", action["action_id"], action["value"], body["user"]["id"])
+    try:
+        await _on_button(body, action, respond, client)
+    except Exception:
+        log.exception("button %s failed", action["action_id"])
+        await respond(replace_original=False, response_type="ephemeral",
+                      text="Sorry, something went wrong with that button. Please try again.")
+
+
+async def _on_button(body, action, respond, client):
     action_id, *parts = [action["action_id"], *action["value"].split("|")]
     conn_id = int(parts[0])
     original = body["message"]["text"]

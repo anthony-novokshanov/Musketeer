@@ -83,7 +83,7 @@ async def test_propose_then_other_time_then_book(group_dm, monkeypatch):
     assert asked == [([requester, helper], 0), ([requester, helper], 1)]
     book_btn, other_btn = slack.posts[1]["blocks"][1]["elements"]
     assert "you're both free *Mon Oct 5, 3:00–3:30 PM*" in slack.posts[1]["text"]
-    assert other_btn["value"] == f"{conn_id}|2"
+    assert other_btn["value"] == f"{conn_id}|2|"   # conn|skip|follow_up_of
 
     _, start_iso, _, approved, _ = book_btn["value"].split("|")
     assert approved == ""

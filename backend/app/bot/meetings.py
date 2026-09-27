@@ -370,6 +370,7 @@ def register(app) -> None:
     @app.action(re.compile(r"^mtg_"))
     async def on_meeting_button(ack, body, action, respond, client):
         await ack()
+        log.info("button %s value=%s user=%s", action["action_id"], action["value"], body["user"]["id"])
         meeting_id, extra = action["value"].split("|", 1)
         meeting_id, act = int(meeting_id), action["action_id"].split(":")[0]
         original = body["message"]["text"]

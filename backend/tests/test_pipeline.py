@@ -23,11 +23,13 @@ async def test_timestamps_shifted_to_now(seeded):
 
 async def test_seed_history_statuses_and_exclusions(seeded):
     rows = await fetch_all("SELECT status, count(*) AS n FROM connections WHERE is_seed GROUP BY status")
-    assert {r["status"]: r["n"] for r in rows} == {"active": 18, "declined": 3, "expired": 2, "accepted": 2}
+    assert {r["status"]: r["n"] for r in rows} == {"active": 18, "declined": 3, "expired": 2, "accepted": 2,
+                                                         "requested": 3}   # requested: seed_spec pending_intros
 
     conns = await fetch_all("""SELECT c.requester_id, c.helper_id, ta.id AS ta, tb.id AS tb, ta.org_id AS oa, tb.org_id AS ob
                                FROM connections c JOIN people a ON a.id = c.requester_id JOIN people b ON b.id = c.helper_id
-                               JOIN teams ta ON ta.id = a.team_id JOIN teams tb ON tb.id = b.team_id""")
+                               JOIN teams ta ON ta.id = a.team_id JOIN teams tb ON tb.id = b.team_id
+                               WHERE c.status <> 'requested'""")   # history only, not the pending intros
     banned = {frozenset(p) for ids in seeded["planted"].values() for p in itertools.combinations(ids, 2)}
     assert not any(frozenset((c["requester_id"], c["helper_id"])) in banned for c in conns)
     assert not any({c["ta"], c["tb"]} == {"t_uni", "t_events"} for c in conns)
@@ -52,7 +54,7 @@ async def test_amber_task(seeded):
 async def test_trend_cagg_has_seed_history(seeded):
     rows = await fetch_all("SELECT event, sum(n) AS n FROM connection_daily GROUP BY event")
     by_event = {r["event"]: r["n"] for r in rows}
-    assert by_event["suggested"] == 25 and by_event["accepted"] == 20
+    assert by_event["suggested"] == 28 and by_event["accepted"] == 20
 
 
 async def test_profiles_written(seeded):

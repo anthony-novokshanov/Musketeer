@@ -118,9 +118,10 @@ async def test_requester_not_now_dismisses_task(client, seeded, fake_muse, monke
 async def test_helper_declines_tries_next_candidate_once(client, seeded, fake_muse, monkeypatch):
     monkeypatch.setattr(settings, "SIMULATED_ACCEPT_SEC", 999)
     priya, jordan = seeded["planted"]["recruiting_mlh"]
-    # People with no connection history, so no interaction bonus/penalty reorders them.
+    # People with no connection history and not on Jordan's team, so no interaction bonus/penalty reorders them.
     fresh = await fetch_all("""SELECT id FROM people p WHERE id NOT IN (%(j)s, %(p)s) AND NOT EXISTS (
                                  SELECT 1 FROM connections c WHERE p.id IN (c.requester_id, c.helper_id))
+                               AND team_id <> (SELECT team_id FROM people WHERE id = %(j)s)
                                ORDER BY id LIMIT 2""", {"j": jordan, "p": priya})
     second, third = (r["id"] for r in fresh)
     fake_muse.handler = muse_for([(priya, 85), (second, 80), (third, 78)])
