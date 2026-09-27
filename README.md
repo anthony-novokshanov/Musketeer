@@ -1,3 +1,4 @@
+##HackGT 13 Submission - https://devpost.com/software/musketeer-8qd3lu 
 ## Inspiration
 
 We initially recognized that connections within companies are often neglected from both the employee and the management side. The connections society usually emphasizes are family and friendships, but one that often gets left in the dust is work relationships, even though around a third of your life after college is spent working. Along with neglected workplace relationships comes another issue that each of us has seen at our internships: **knowledge gaps between teams and employees**. We needed a way to fix this, and that's where we came to our solution.
