@@ -371,6 +371,16 @@ svg.focusing .hullg{opacity:.5}
 .team-card{display:grid;gap:18px;align-content:start}
 .team-card .ppl{display:flex}
 .team-card .ppl .av+.av{margin-left:-8px;outline:2px solid var(--white)}
+.ag-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:14px}
+.ag-form textarea{width:100%;height:76px;border:1px solid var(--border);border-radius:14px;background:var(--white);font:inherit;font-size:14px;color:var(--text-primary);padding:10px 14px;resize:vertical;line-height:1.45}
+.ag-form textarea:focus{outline:none;border-color:var(--border-hover)}
+.ag-side{display:flex;gap:8px;align-items:center}
+.ag-side select{height:40px;border-radius:999px;border:1px solid var(--border);padding:0 12px;font:inherit;font-size:14px;background:var(--white);color:var(--text-primary)}
+.ag-out{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,320px);gap:16px;margin-top:18px}
+.ag-out .sim-list{display:grid;gap:8px}
+.ag-skill{display:grid;gap:4px;margin-bottom:12px;font-size:13px}
+.ag-skill .row{display:flex;justify-content:space-between;gap:8px}
+@media (max-width:760px){.ag-form,.ag-out{grid-template-columns:1fr}}
 .tstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .tstats .tile{padding:14px}
 .tstats .tile .num-lg{margin-top:8px;display:block}
@@ -812,6 +822,14 @@ svg.focusing .hullg{opacity:.5}
         <div class="grow"></div>
         <div class="seg" id="teamSort"><button data-s="iso" class="on">Most isolated</button><button data-s="conn">Most connected</button><button data-s="az">A–Z</button></div>
       </div>
+    </div>
+    <div class="card" id="agCard">
+      <div class="card-head"><span id="agSpark" style="color:var(--meta-blue);display:flex"></span><h2 class="t-sm">Auto group</h2><span class="label" style="font-size:14px">Describe a project and Musketeer picks the people whose recent work covers it.</span></div>
+      <div class="ag-form">
+        <textarea id="agDesc" maxlength="2000" placeholder="e.g. We're running a sponsor booth at a university hackathon next month and want to recruit interns from it." aria-label="Project description"></textarea>
+        <div class="ag-side"><select id="agSize" aria-label="Team size"><option value="3">3 people</option><option value="4" selected>4 people</option><option value="5">5 people</option><option value="6">6 people</option></select><button class="pill primary" id="agGo">Build team</button></div>
+      </div>
+      <div id="agOut"></div>
     </div>
     <div class="teams-grid" id="teamsGrid"></div>
   </section>
@@ -1526,7 +1544,7 @@ function updateLinkVis(){
 }
 function updateNodeClasses(){
   if(!nodeSel)return;shadeNodes();queueLinkVis();
-  nodeSel.classed('selected',d=>d.id===GR.selected||(GR.selEdge||'').split('|').includes(d.id)).classed('has-alert',d=>!!P[d.id].task).classed('me',d=>d.id===VIEWER).classed('scope',d=>d.team.dept===VIEWER_DEPT);
+  nodeSel.classed('selected',d=>d.id===GR.selected||(GR.selEdge||'').split('|').includes(d.id)||!!(GR.group&&GR.group.has(d.id))).classed('has-alert',d=>!!P[d.id].task).classed('me',d=>d.id===VIEWER).classed('scope',d=>d.team.dept===VIEWER_DEPT);
   tNodeSel.classed('scope',d=>d.team.dept===VIEWER_DEPT).each(function(d){
     const s=teamStats(d.team.id);const g=d3.select(this);g.select('.tsub').text(`${s.cross} cross-team`);
     g.select('.talert').style('display',s.alerts?null:'none').select('text').text(s.alerts);
@@ -1603,7 +1621,7 @@ function focusDept(dept){GR.scope={dept,team:null};renderCrumb();fitTo(nodes.fil
 function focusTeam(tid){if(showTeam(tid))return setTimeout(()=>focusTeam(tid),60);GR.scope={dept:T[tid].dept,team:tid};renderCrumb();fitTo(nodes.filter(n=>n.team.id===tid),750,60,Math.max(GR.fitK*1.15,Math.min(2,scaleFor(nodes.filter(n=>n.team.id===tid),60).k)))}
 function selectPerson(pid,zoomIn){
   if(showTeam(P[pid].team))return setTimeout(()=>selectPerson(pid,zoomIn),60);
-  GR.selected=pid;updateNodeClasses();openPanel(pid);
+  GR.selected=pid;GR.group=null;updateNodeClasses();openPanel(pid);
   if(zoomIn||GR.mix<.5){const nb=new Set([pid]);links.forEach(l=>{if(l.source.id===pid)nb.add(l.target.id);if(l.target.id===pid)nb.add(l.source.id)});
     const ns=nodes.filter(n=>nb.has(n.id));setTimeout(()=>fitTo(ns,650,90,Math.max(GR.fitK*1.1,Math.min(2,scaleFor(ns,90).k))),40)}
 }
@@ -1702,7 +1720,7 @@ function openTeamEdge(ta,tb){
   }).catch(()=>{});
 }
 
-function closePanel(){$('#panel').classList.remove('open');GR.selected=null;if(GR.selEdge){GR.selEdge=null;linkSel.classed('esel',false)}updateNodeClasses()}
+function closePanel(){$('#panel').classList.remove('open');GR.selected=null;GR.group=null;if(GR.selEdge){GR.selEdge=null;linkSel.classed('esel',false)}updateNodeClasses()}
 function graphOnShow(){
   requestAnimationFrame(()=>{
     // the first layout may have run while this tab was hidden (unknown shape): redo it for the real one
@@ -2267,6 +2285,34 @@ function renderTeams(){
   $$('#teamsGrid .tgo').forEach(b=>b.onclick=()=>{go('graph');setTimeout(()=>focusTeam(b.dataset.t),80)});
 }
 $$('#teamSort button').forEach(b=>b.addEventListener('click',()=>{teamSort=b.dataset.s;$$('#teamSort button').forEach(x=>x.classList.toggle('on',x===b));renderTeams()}));
+
+/* ---------------- auto group: POST /api/auto-group ---------------- */
+$('#agSpark').innerHTML=ic('sparkle','i sm');
+async function autoGroup(){
+  const desc=$('#agDesc').value.trim(),out=$('#agOut'),btn=$('#agGo');
+  if(desc.length<10){out.innerHTML='<div class="help" style="margin-top:12px">Describe the project in a sentence or two.</div>';return}
+  btn.disabled=true;out.innerHTML='<div class="help" style="margin-top:12px">Reading the project and matching it against recent work…</div>';
+  let r;try{r=await api('/auto-group',{description:desc,size:+$('#agSize').value})}catch(err){out.innerHTML=`<div class="help" style="margin-top:12px">${esc(err.message)}</div>`;btn.disabled=false;return}
+  btn.disabled=false;
+  if(!r.members.length){out.innerHTML='<div class="help" style="margin-top:12px">Nobody has recent work on this yet.</div>';return}
+  const first=pid=>esc((P[pid]?P[pid].first:'')||'');
+  out.innerHTML=`<div class="ag-out">
+    <div><div class="cap" style="margin-bottom:10px">Suggested team</div><div class="sim-list">${r.members.map(m=>`
+      <div class="sim-item" data-o="${m.person_id}">${av(m.person_id,36)}<div style="min-width:0"><div class="nm">${esc(m.name)}</div><small>${esc(m.title)}</small>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${m.skills.slice(0,3).map(s=>`<span class="chip">${esc(s.name)} · ${pct(s.level)}%</span>`).join('')}</div></div><span></span></div>`).join('')}</div></div>
+    <div><div class="cap" style="margin-bottom:10px">What the project needs · ${pct(r.coverage)}% covered</div>
+      ${r.skills.map(s=>`<div class="ag-skill"><div class="row"><span>${esc(s.name)}</span><span style="color:var(--text-secondary)">${s.covered_by?first(s.covered_by)+' · ':''}${pct(s.coverage)}%</span></div><div class="simbar"><i style="width:${pct(s.coverage)}%"></i></div></div>`).join('')}
+      <button class="pill" id="agShow" style="margin-top:6px">Show on graph</button></div>
+  </div>`;
+  $$('#agOut .sim-item').forEach(el=>el.onclick=()=>{if(P[el.dataset.o]){go('graph');setTimeout(()=>selectPerson(el.dataset.o,true),80)}});
+  $('#agShow').onclick=()=>{
+    const ids=new Set(r.members.map(m=>m.person_id));
+    r.members.forEach(m=>showTeam(m.team_id));
+    go('graph');setTimeout(()=>{GR.group=ids;updateNodeClasses();fitTo(nodes.filter(n=>ids.has(n.id)),750);toast(`Suggested team of ${ids.size} highlighted`)},120);
+  };
+}
+$('#agGo').addEventListener('click',autoGroup);
+$('#agDesc').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))autoGroup()});
 
 /* ---------------- Settings ---------------- */
 /* Settings are stored by the backend (GET/PUT /api/settings) and used immediately by the pipeline. */

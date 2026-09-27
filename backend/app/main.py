@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import actions, bridges, dev, graph, pairs, people, search, settings_api, synopsis
+from app.api import actions, auto_group, bridges, dev, graph, pairs, people, search, settings_api, synopsis
 from app.bot import flows, jobs
 from app.config import settings
 from app.db import fetch_one, pool
@@ -46,7 +46,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-for module in (graph, people, pairs, bridges, search, synopsis, actions, settings_api):
+for module in (graph, people, pairs, bridges, search, synopsis, actions, settings_api, auto_group):
     app.include_router(module.router, prefix="/api")
 if settings.ENABLE_DEV_ROUTES:
     app.include_router(dev.router, prefix="/api")
