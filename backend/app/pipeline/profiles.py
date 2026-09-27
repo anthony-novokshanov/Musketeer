@@ -1,4 +1,4 @@
-"""Person/team profiles (P2, P3), GitHub aggregates (§8.2) and the roster block (§7.3)."""
+"""Person/team profiles (P2, P3), GitHub aggregates (§9.2), expertise cards and the roster block (§8.3)."""
 import asyncio
 import json
 import logging
@@ -42,57 +42,104 @@ async def github_aggregates() -> dict[str, dict]:
     return out
 
 
-async def roster_block() -> str:
-    """One line per person, ordered by id so the prefix is byte-identical across calls."""
-    people = await fetch_all("""
-        SELECT p.id, p.name, p.title, p.is_engineer, p.summary, p.focus_areas, t.name AS team, o.name AS org
-        FROM people p JOIN teams t ON t.id = p.team_id JOIN orgs o ON o.id = t.org_id
-        ORDER BY p.id""")
+async def engineer_dirs() -> dict[str, set[str]]:
+    """GitHub directory set per engineer (empty for everyone else), for dir_overlap and candidates."""
     gh = await github_aggregates()
-    lines = []
+    people = await fetch_all("SELECT id, is_engineer FROM people")
+    return {p["id"]: gh[p["id"]]["all_directories"] if p["is_engineer"] and p["id"] in gh else set() for p in people}
+
+
+CARD_SKILLS = 6
+CARD_SNIPPETS = 2
+
+
+def _ago(computed_at, last_seen) -> str:
+    """Days relative to the state's computed_at, so cards stay byte-identical between refreshes."""
+    return f"{max(0, (computed_at - last_seen).days)}d ago"
+
+
+async def skill_rows(person_ids: list[str] | None = None, limit: int = CARD_SKILLS) -> dict[str, list[dict]]:
+    """Top skills by level per person, from person_skill_state."""
+    rows = await fetch_all("""
+        SELECT * FROM (
+            SELECT st.*, s.name, row_number() OVER (PARTITION BY st.person_id ORDER BY st.level DESC, s.name) AS rn
+            FROM person_skill_state st JOIN skills s ON s.id = st.skill_id
+            WHERE %(pids)s::text[] IS NULL OR st.person_id = ANY(%(pids)s)) r
+        WHERE rn <= %(limit)s ORDER BY person_id, rn""", {"pids": person_ids, "limit": limit})
+    out: dict[str, list[dict]] = {}
+    for r in rows:
+        out.setdefault(r["person_id"], []).append(r)
+    return out
+
+
+def format_skills(skills: list[dict], snippets: int = CARD_SNIPPETS) -> str:
+    parts = []
+    for i, k in enumerate(skills):
+        detail = f"{k['level']:.2f}, {k['trend']}, {_ago(k['computed_at'], k['last_seen'])}"
+        if i < snippets:
+            detail += f': "{k["best_snippet"]}"'
+        parts.append(f"{k['name']} ({detail})")
+    return "; ".join(parts) or "none yet"
+
+
+async def expertise_cards(person_ids: list[str] | None = None) -> dict[str, str]:
+    """The temporal graph rendered as text for Muse (spec §8.3), keyed by person id."""
+    people = await fetch_all("""
+        SELECT p.id, p.name, p.title, p.is_engineer, p.summary, t.name AS team, o.name AS org
+        FROM people p JOIN teams t ON t.id = p.team_id JOIN orgs o ON o.id = t.org_id
+        WHERE %(pids)s::text[] IS NULL OR p.id = ANY(%(pids)s) ORDER BY p.id""", {"pids": person_ids})
+    skills = await skill_rows(person_ids)
+    gh = await github_aggregates()
+    cards = {}
     for p in people:
-        line = (f"[{p['id']}] {p['name']} | {p['title']} | {p['team']} ({p['org']}) | "
-                f"Summary: {p['summary'] or ''} | Focus: {', '.join(p['focus_areas'])}")
+        card = (f"[{p['id']}] {p['name']} | {p['title']} | {p['team']} ({p['org']})\n"
+                f"Summary: {p['summary'] or ''}\n"
+                f"Skills (level, trend, last seen): {format_skills(skills.get(p['id'], []))}")
         if p["is_engineer"] and p["id"] in gh:
-            line += (f" | Code: {', '.join(gh[p['id']]['top_directories'])}"
+            card += (f"\nCode: {', '.join(gh[p['id']]['top_directories'])}"
                      f" | Langs: {', '.join(gh[p['id']]['languages'])}")
-        lines.append(line)
-    return "\n".join(lines)
+        cards[p["id"]] = card
+    return cards
+
+
+async def roster_block() -> str:
+    """Every expertise card, ordered by id so the prefix is byte-identical between refreshes."""
+    return "\n\n".join((await expertise_cards()).values())
 
 
 async def build_person_profiles() -> None:
     people = await fetch_all("""
         SELECT p.id, p.name, p.title, t.name AS team FROM people p JOIN teams t ON t.id = p.team_id ORDER BY p.id""")
     gh = await github_aggregates()
+    skills = await skill_rows(limit=10)
 
     async def one(p: dict) -> None:
         events = await fetch_all("""
             SELECT time, kind, text FROM activity_events
-            WHERE person_id = %s AND direction = 'did' ORDER BY time DESC LIMIT 40""", (p["id"],))
+            WHERE person_id = %s AND direction = 'did' ORDER BY time DESC LIMIT 20""", (p["id"],))
         agg = gh.get(p["id"])
         github = "none" if not agg else json.dumps({k: v for k, v in agg.items() if k != "all_directories"})
         out = await muse_json("person_profile", {
             "name": p["name"], "title": p["title"], "team": p["team"], "github": github,
+            "skills": format_skills(skills.get(p["id"], []), snippets=10),
             "events": "\n".join(f"- {e['time']:%Y-%m-%d} [{e['kind']}] {e['text']}" for e in events) or "none",
         }, ProfileOut)
-        await execute("UPDATE people SET summary = %s, focus_areas = %s WHERE id = %s",
-                      (out.summary, out.focus_areas[:6], p["id"]))
+        await execute("UPDATE people SET summary = %s WHERE id = %s", (out.summary, p["id"]))
 
     await asyncio.gather(*(one(p) for p in people))
     log.info("profiled %d people", len(people))
 
 
 async def build_team_profiles() -> None:
-    teams = await fetch_all("SELECT id, name FROM teams ORDER BY id")
+    teams = await fetch_all("SELECT id, name, focus_areas FROM teams ORDER BY id")
 
     async def one(t: dict) -> None:
         members = await fetch_all("SELECT name, title, summary FROM people WHERE team_id = %s ORDER BY id", (t["id"],))
         out = await muse_json("team_profile", {
-            "team_name": t["name"],
+            "team_name": t["name"], "top_skills": ", ".join(t["focus_areas"]) or "none yet",
             "member_summaries": "\n".join(f"- {m['name']} ({m['title']}): {m['summary'] or ''}" for m in members),
         }, ProfileOut)
-        await execute("UPDATE teams SET summary = %s, focus_areas = %s WHERE id = %s",
-                      (out.summary, out.focus_areas[:6], t["id"]))
+        await execute("UPDATE teams SET summary = %s WHERE id = %s", (out.summary, t["id"]))
 
     await asyncio.gather(*(one(t) for t in teams))
     log.info("profiled %d teams", len(teams))

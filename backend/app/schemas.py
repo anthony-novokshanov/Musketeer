@@ -18,16 +18,25 @@ class NormalizedEvent(BaseModel):
 
 # --- Muse prompt outputs (spec §7.4) ---
 
+class RequiredSkill(BaseModel):
+    label: str
+    weight: float                                   # 0-1
+
+
 class DetectTaskOut(BaseModel):                     # P1
     is_new_task: bool
     confidence: float
     summary: str
     task_type: Literal["event", "project", "bug", "review", "request", "other"]
+    required_skills: list[RequiredSkill] = []       # 1-4; canonicalized before storage
 
 
-class ProfileOut(BaseModel):                        # P2, P3
+class RequiredSkillsOut(BaseModel):                 # P1, required-skills part only (tasks backfill, search)
+    required_skills: list[RequiredSkill]
+
+
+class ProfileOut(BaseModel):                        # P2, P3 (focus areas come from the decay model, §7.3)
     summary: str
-    focus_areas: list[str]
 
 
 class ScoredPerson(BaseModel):
@@ -71,6 +80,39 @@ class IcebreakerOut(BaseModel):                     # P10
 
 class SynopsisSummaryOut(BaseModel):                # P11
     summary: str
+
+
+SkillKind = Literal["problem", "domain", "tool", "practice"]
+
+
+class EvidenceItem(BaseModel):
+    label: str
+    evidence_kind: Literal["built", "solved", "organized", "reviewed", "discussed"]  # helped/learned: feedback only
+    confidence: float
+    snippet: str
+
+
+class ExtractExpertiseOut(BaseModel):               # P12
+    items: list[EvidenceItem]
+
+
+class CanonicalSkill(BaseModel):
+    name: str
+    kind: SkillKind
+    description: str
+    raw_labels: list[str]
+    related: list[str]
+
+
+class CanonicalizeSkillsOut(BaseModel):             # P13 batch
+    skills: list[CanonicalSkill]
+
+
+class CanonicalizeLabelOut(BaseModel):              # P13 incremental
+    skill_name: str
+    is_new: bool
+    kind: SkillKind | None = None
+    description: str | None = None
 
 
 # --- API responses (spec §11) ---
@@ -157,6 +199,13 @@ class PersonMatch(BaseModel):
     reason: str
     state: EdgeState
     shared_dirs: list[str]
+    shared_skills: list[str] = []
+
+
+class PersonSkill(BaseModel):
+    skill_id: str
+    name: str
+    level_label: Literal["strong", "solid", "some"]
 
 
 class PersonConnection(BaseModel):
@@ -174,6 +223,7 @@ class PersonOut(Ref):
     team: PersonTeam
     summary: str | None
     focus_areas: list[str]
+    skills: list[PersonSkill] = []
     github: GitHubSummary | None
     open_tasks: list[PersonTask]
     matches: list[PersonMatch]
@@ -207,10 +257,12 @@ class PairOut(BaseModel):
     a: PairSide
     b: PairSide
     semantic_score: float | None
+    temporal_score: float | None = None
     dir_overlap: float | None
     score: float | None
     reason: str | None
     shared_dirs: list[str]
+    shared_skills: list[str] = []
     connections: list[PairConnection]
 
 

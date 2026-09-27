@@ -1,17 +1,31 @@
-"""Public-channel Slack messages that mention a roster person -> 'received' event for them (spec §6.3).
+"""Public-channel Slack messages (spec §6.3): a 'did' event for a roster sender (expertise evidence), and a
+'received' event for each mentioned roster person (task detection).
 Connection group DMs are never ingested here; they are only counted (flows.count_message)."""
+import logging
 import re
 from datetime import datetime, timezone
 
-from app.db import fetch_all
+from app.db import fetch_all, fetch_one
+from app.expertise.extract import ingest_did
 from app.pipeline.tasks import ingest_received
 from app.schemas import NormalizedEvent
+
+log = logging.getLogger("musketeer.slack_ingest")
 
 MENTION = re.compile(r"<@([A-Z0-9]+)>")
 
 
 async def ingest_channel_message(event: dict) -> list[dict]:
     text = event.get("text") or ""
+    results = await _ingest_mentions(event, text)
+    try:   # after task detection, so the sender's extraction never delays a suggestion
+        await _ingest_sender(event, text)
+    except Exception:
+        log.exception("expertise extraction failed for channel message %s", event.get("ts"))
+    return results
+
+
+async def _ingest_mentions(event: dict, text: str) -> list[dict]:
     mentioned = set(MENTION.findall(text)) - {event.get("user")}
     if not mentioned:
         return []
@@ -27,3 +41,12 @@ async def ingest_channel_message(event: dict) -> list[dict]:
         if result:
             results.append(result)
     return results
+
+
+async def _ingest_sender(event: dict, text: str) -> None:
+    sender = await fetch_one("SELECT id FROM people WHERE slack_user_id = %s", (event.get("user"),))
+    if sender and text.strip():
+        await ingest_did(NormalizedEvent(
+            source="slack", kind="slack_message", external_id=f"{event['channel']}:{event['ts']}",
+            time=datetime.fromtimestamp(float(event["ts"]), tz=timezone.utc), person_id=sender["id"],
+            direction="did", title=None, text=MENTION.sub("someone", text)[:800], metadata={"channel": event["channel"]}))

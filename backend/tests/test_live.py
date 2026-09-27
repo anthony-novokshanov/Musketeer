@@ -20,6 +20,9 @@ async def client():
 
 @pytest.fixture(autouse=True)
 async def instant_simulation(monkeypatch, seeded, client):
+    # These tests are about the Slack flows; the Muse score alone decides (blend covered in test_scoring).
+    monkeypatch.setattr(settings, "W_SEMANTIC", 1.0)
+    monkeypatch.setattr(settings, "W_TEMPORAL", 0.0)
     monkeypatch.setattr(settings, "SIMULATED_ACCEPT_SEC", 0)
     monkeypatch.setattr(flows, "SIMULATED_ACTIVE_AFTER_SEC", 0)
     yield

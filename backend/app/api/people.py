@@ -31,6 +31,7 @@ async def person(person_id: str):
     matches = await fetch_all(f"""
         WITH {LATEST_CONN}
         SELECT o.id AS person_id, o.name, t.name AS team_name, s.score, s.reason, s.shared_dirs,
+               ARRAY(SELECT name FROM skills k JOIN unnest(s.shared_skills) WITH ORDINALITY u(id, i) ON k.id = u.id ORDER BY u.i) AS shared_skills,
                {edge_state('l.status')} AS state
         FROM similarities s
         JOIN people o ON o.id = CASE WHEN s.person_a = %(p)s THEN s.person_b ELSE s.person_a END
@@ -47,4 +48,11 @@ async def person(person_id: str):
         WHERE %(p)s IN (c.requester_id, c.helper_id)
         ORDER BY c.created_at DESC""", {"p": person_id})
 
-    return {**p, "github": github, "open_tasks": open_tasks, "matches": matches, "connections": connections}
+    # Current skills as chips; never trends or history (spec §12 skill exposure rule).
+    skills = await fetch_all("""
+        SELECT st.skill_id, s.name, CASE WHEN st.level >= 0.7 THEN 'strong' WHEN st.level >= 0.4 THEN 'solid'
+                                         ELSE 'some' END AS level_label
+        FROM person_skill_state st JOIN skills s ON s.id = st.skill_id
+        WHERE st.person_id = %s ORDER BY st.level DESC, s.name LIMIT 8""", (person_id,))
+
+    return {**p, "skills": skills, "github": github, "open_tasks": open_tasks, "matches": matches, "connections": connections}

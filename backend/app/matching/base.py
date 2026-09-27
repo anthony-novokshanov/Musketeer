@@ -7,8 +7,11 @@ from app.config import settings
 
 class Match(BaseModel):
     person_id: str
-    score: float        # 0..1, always calibrated by Muse (never a raw cosine)
+    score: float                    # 0..1 final score (§9.3 blend), never a raw cosine
+    semantic_score: float           # Muse score / 100
+    temporal_score: float           # temporal_sim or task_relevance
     reason: str
+    shared_skills: list[str] = []
 
 
 class Matcher(Protocol):
