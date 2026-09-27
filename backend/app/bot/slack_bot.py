@@ -44,6 +44,9 @@ async def on_button(ack, body, action, respond, say, client):
     action_id, *parts = [action["action_id"], *action["value"].split("|")]
     conn_id = int(parts[0])
     original = body["message"]["text"]
+    if not await fetch_one("SELECT 1 FROM connections WHERE id = %s", (conn_id,)):
+        await respond(replace_original=True, text=f"{original}\n_This conversation was reset, so this button no longer works._")
+        return
 
     if action_id == messages.CONNECT:
         # Don't notify the helper yet: the requester first says what they need (and can attach docs).
@@ -59,6 +62,7 @@ async def on_button(ack, body, action, respond, say, client):
         await respond(replace_original=True, text=f"{original}\n_{label}_")
         await step(conn_id)
     elif action_id == messages.GRAB_15:
+        await respond(replace_original=True, text=f"{original}\n_Finding a time that works for both of you…_")
         await flows.propose_meeting(conn_id)
     elif action_id == messages.OTHER_TIME:
         await respond(replace_original=True, text=f"{original}\n_Looking for another time…_")

@@ -259,9 +259,10 @@ async def count_message(channel_id: str, slack_user_id: str) -> None:
     await execute("INSERT INTO connection_events (connection_id, event, person_id) VALUES (%s, 'message', %s)",
                   (conn["id"], conn["person_id"]))
     if conn["status"] == "accepted":
-        senders = await fetch_all("""SELECT person_id FROM connection_events WHERE connection_id = %s AND event = 'message'
-                                     GROUP BY person_id HAVING count(*) >= 2""", (conn["id"],))
-        if len(senders) >= 2 and await transition(conn["id"], "active", ("accepted",)):
+        # A short exchange: both people have spoken and there are 4+ messages in total.
+        ex = await fetch_one("""SELECT count(DISTINCT person_id) AS people, count(*) AS n FROM connection_events
+                                WHERE connection_id = %s AND event = 'message'""", (conn["id"],))
+        if ex["people"] >= 2 and ex["n"] >= 4 and await transition(conn["id"], "active", ("accepted",)):
             spawn(lambda: propose_meeting(conn["id"]))  # after a short exchange, offer a time that works for both
 
 
