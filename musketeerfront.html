@@ -606,8 +606,8 @@ svg.focusing .hullg{opacity:.5}
 
 .legend{max-width:calc(100% - 200px)}
 /* in-progress intros: the dashes slowly move */
-.l-notified{animation:mk-dash 1.1s linear infinite}
-@keyframes mk-dash{to{stroke-dashoffset:-9}}
+.l-notified{stroke-dasharray:4 8!important;animation:mk-dash 1.45s linear infinite}
+@keyframes mk-dash{to{stroke-dashoffset:-12}}
 @media (prefers-reduced-motion:reduce){.l-notified{animation:none}}
 /* team leads: bigger node, double ring, at the center of their team */
 .lead-ring{fill:none;stroke-width:2}
@@ -753,7 +753,7 @@ svg.focusing .hullg{opacity:.5}
         <div class="gtip" id="gtip" hidden></div>
         <div class="legend">
           <span><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#0081FB" stroke-width="2.5" stroke-linecap="round"/></svg>Talked</span>
-          <span><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#8A8D91" stroke-width="1.5" stroke-dasharray="4 3"/></svg>Intro pending (moving)</span><span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#5A7FA8" stroke-width="1.5"/><circle cx="9" cy="9" r="5.5" fill="#5A7FA8"/></svg>Team lead</span><span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#0064E0" stroke-width="2"/><circle cx="9" cy="9" r="5" fill="#8FB7EC"/></svg>You</span>
+          <span><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#8A8D91" stroke-width="1.5" stroke-dasharray="2 4"/></svg>Intro pending (moving)</span><span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#5A7FA8" stroke-width="1.5"/><circle cx="9" cy="9" r="5.5" fill="#5A7FA8"/></svg>Team lead</span><span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#0064E0" stroke-width="2"/><circle cx="9" cy="9" r="5" fill="#8FB7EC"/></svg>You</span>
           <span><svg width="18" height="6"><line x1="1" y1="3" x2="17" y2="3" stroke="#BCC0C4" stroke-width="2" stroke-linecap="round"/></svg>Similar work</span>
           <span><i class="dot-y"></i>New task, no connection yet</span>
           <span><svg width="30" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.5" fill="#DCEBFF" stroke="#8FB7EC"/><circle cx="15" cy="5" r="4.5" fill="#6FA9F0"/><circle cx="25" cy="5" r="4.5" fill="#0064E0"/></svg>Darker = more connected</span><span style="color:var(--text-tertiary)">Zoom out to see teams</span>
